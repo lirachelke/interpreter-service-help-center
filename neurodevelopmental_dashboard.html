@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neurodevelopmental Self-Assessment Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --card: #ffffff;
+    --sage: #4a7b6e;
+    --sage-light: #e8f2ef;
+    --purple: #6e5fa0;
+    --purple-light: #eeeaf7;
+    --amber: #d97706;
+    --amber-light: #fef3c7;
+    --coral: #e05c4b;
+    --coral-light: #fdecea;
+    --teal: #0891b2;
+    --teal-light: #e0f2fe;
+    --text: #1e1e1e;
+    --text-muted: #6b7280;
+    --border: #e5e0d8;
+    --signal-high: #e05c4b;
+    --signal-mid: #d97706;
+    --signal-ok: #4a7b6e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  /* ── Header ── */
+  .hero {
+    background: linear-gradient(135deg, #2d5a4f 0%, #4a3d7a 100%);
+    color: white;
+    padding: 48px 40px 40px;
+    position: relative;
+  }
+  .hero-inner { max-width: 1100px; margin: 0 auto; }
+  .hero h1 { font-size: 1.9rem; font-weight: normal; letter-spacing: 0.02em; margin-bottom: 6px; }
+  .hero .subtitle { font-size: 0.95rem; opacity: 0.75; margin-bottom: 32px; font-family: sans-serif; }
+  .hero-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+  .pill {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-family: sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .pill-confirmed { background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.35); }
+  .pill-hypothesis { background: rgba(255,220,100,0.25); color: #fde68a; border: 1px solid rgba(255,220,100,0.4); }
+  .hero-note {
+    background: rgba(255,255,255,0.08);
+    border-left: 3px solid rgba(255,255,255,0.4);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.85rem;
+    font-family: sans-serif;
+    opacity: 0.85;
+    max-width: 720px;
+  }
+
+  /* ── Layout ── */
+  .main { max-width: 1100px; margin: 0 auto; padding: 40px 20px 80px; }
+
+  .section-title {
+    font-size: 1.1rem;
+    font-family: sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin: 48px 0 20px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+
+  /* ── At-a-Glance Grid ── */
+  .glance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 16px;
+  }
+
+  .glance-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 20px 22px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+  }
+  .glance-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    border-radius: 12px 12px 0 0;
+  }
+  .glance-card.high::before { background: var(--coral); }
+  .glance-card.mod::before { background: var(--amber); }
+  .glance-card.notable::before { background: var(--purple); }
+
+  .glance-abbr {
+    font-family: sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .glance-name {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    font-family: sans-serif;
+  }
+  .glance-score {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .glance-score span { font-size: 1rem; color: var(--text-muted); font-weight: normal; }
+  .glance-threshold {
+    font-size: 0.78rem;
+    font-family: sans-serif;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+  .glance-bar-wrap { background: #f0ede8; border-radius: 4px; height: 6px; margin-bottom: 10px; }
+  .glance-bar { height: 6px; border-radius: 4px; }
+  .glance-bar.high { background: var(--coral); }
+  .glance-bar.mod { background: var(--amber); }
+  .glance-bar.notable { background: var(--purple); }
+  .glance-signal {
+    font-size: 0.78rem;
+    font-family: sans-serif;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    display: inline-block;
+  }
+  .glance-signal.high { background: var(--coral-light); color: var(--coral); }
+  .glance-signal.mod { background: var(--amber-light); color: var(--amber); }
+  .glance-signal.notable { background: var(--purple-light); color: var(--purple); }
+
+  /* ── Chart section ── */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 700px) { .chart-grid { grid-template-columns: 1fr; } }
+
+  .chart-card { background: var(--card); border-radius: 12px; padding: 24px; border: 1px solid var(--border); }
+  .chart-card h3 { font-family: sans-serif; font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+  .chart-card .chart-desc { font-family: sans-serif; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; }
+  .chart-wrap { position: relative; height: 220px; }
+
+  /* ── Horizontal percentile bars ── */
+  .perc-list { display: flex; flex-direction: column; gap: 10px; }
+  .perc-row { display: flex; align-items: center; gap: 12px; }
+  .perc-label { font-family: sans-serif; font-size: 0.82rem; width: 160px; flex-shrink: 0; color: var(--text); }
+  .perc-bar-wrap { flex: 1; background: #f0ede8; border-radius: 4px; height: 10px; position: relative; }
+  .perc-bar { height: 10px; border-radius: 4px; transition: width 0.6s ease; }
+  .perc-bar.high { background: var(--coral); }
+  .perc-bar.low { background: var(--purple); }
+  .perc-bar.mid { background: var(--sage); }
+  .perc-bar.amber { background: var(--amber); }
+  .perc-val { font-family: sans-serif; font-size: 0.8rem; font-weight: 700; width: 42px; text-align: right; color: var(--text-muted); }
+
+  /* ── Norm comparison ── */
+  .norm-row {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .norm-row:last-child { border-bottom: none; }
+  .norm-instrument { font-family: sans-serif; font-weight: 700; font-size: 0.85rem; width: 80px; flex-shrink: 0; padding-top: 2px; }
+  .norm-bars { flex: 1; }
+  .norm-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .norm-bar-label { font-family: sans-serif; font-size: 0.75rem; color: var(--text-muted); width: 90px; flex-shrink: 0; }
+  .norm-bar-track { flex: 1; height: 14px; background: #f0ede8; border-radius: 4px; position: relative; overflow: visible; }
+  .norm-bar-fill { height: 14px; border-radius: 4px; position: relative; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; }
+  .norm-bar-fill span { font-family: sans-serif; font-size: 0.7rem; font-weight: 700; color: white; }
+  .norm-threshold-line {
+    position: absolute; top: -3px; bottom: -3px; width: 2px;
+    background: #2c2c2c; opacity: 0.4; border-radius: 2px;
+  }
+
+  /* ── Sensory quadrant ── */
+  .sensory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .sensory-quad {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid var(--border);
+  }
+  .sq-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .sq-name { font-family: sans-serif; font-weight: 700; font-size: 0.9rem; }
+  .sq-sd { font-family: sans-serif; font-size: 1.3rem; font-weight: 800; }
+  .sq-sd.extreme { color: var(--coral); }
+  .sq-sd.high { color: var(--amber); }
+  .sq-sd.mod { color: var(--sage); }
+  .sq-class { font-family: sans-serif; font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: 12px; margin-bottom: 10px; display: inline-block; }
+  .sq-class.extreme { background: var(--coral-light); color: var(--coral); }
+  .sq-class.high { background: var(--amber-light); color: var(--amber); }
+  .sq-class.mod { background: var(--sage-light); color: var(--sage); }
+  .sq-bar-wrap { background: #f0ede8; border-radius: 4px; height: 8px; }
+  .sq-bar { height: 8px; border-radius: 4px; }
+  .sq-bar.extreme { background: var(--coral); }
+  .sq-bar.high { background: var(--amber); }
+  .sq-bar.mod { background: var(--sage); }
+  .sq-desc { font-family: sans-serif; font-size: 0.8rem; color: var(--text-muted); margin-top: 10px; line-height: 1.5; }
+
+  /* ── Daily life callouts ── */
+  .callout-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .callout {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 18px 20px;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--sage);
+  }
+  .callout.purple { border-left-color: var(--purple); }
+  .callout.amber { border-left-color: var(--amber); }
+  .callout.coral { border-left-color: var(--coral); }
+  .callout.teal { border-left-color: var(--teal); }
+  .callout-domain { font-family: sans-serif; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 6px; }
+  .callout h4 { font-family: sans-serif; font-size: 0.92rem; font-weight: 700; margin-bottom: 8px; }
+  .callout p { font-family: sans-serif; font-size: 0.83rem; color: #4b5563; line-height: 1.55; }
+
+  /* ── Myth busting ── */
+  .myth-list { display: flex; flex-direction: column; gap: 16px; }
+  .myth-card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 20px 22px;
+    border: 1px solid var(--border);
+    display: flex; gap: 16px;
+  }
+  .myth-content {}
+  .myth-myth { font-family: sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--coral); margin-bottom: 8px; }
+  .myth-truth { font-family: sans-serif; font-size: 0.83rem; color: #4b5563; line-height: 1.55; }
+  .myth-badge {
+    display: inline-block;
+    font-family: sans-serif; font-size: 0.72rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+    background: var(--sage-light); color: var(--sage);
+    margin-top: 8px;
+  }
+
+  /* ── Next steps ── */
+  .next-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .next-grid { grid-template-columns: 1fr; } }
+
+  .next-table { width: 100%; border-collapse: collapse; font-family: sans-serif; font-size: 0.84rem; }
+  .next-table th { text-align: left; padding: 10px 12px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+  .next-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .next-table tr:last-child td { border-bottom: none; }
+  .priority-high { font-weight: 700; color: var(--coral); }
+  .priority-med { font-weight: 700; color: var(--amber); }
+
+  .q-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .q-list li {
+    background: var(--sage-light);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: sans-serif;
+    font-size: 0.83rem;
+    color: var(--text);
+    border-left: 3px solid var(--sage);
+    line-height: 1.5;
+  }
+  .q-num { font-weight: 700; color: var(--sage); margin-right: 6px; }
+
+  /* ── Interpretation legend ── */
+  .legend-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .legend-item {
+    background: var(--card);
+    border-radius: 8px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    font-family: sans-serif;
+  }
+  .legend-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .legend-range { font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+  .legend-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
+  .legend-item.l-high .legend-label { color: var(--coral); }
+  .legend-item.l-mid .legend-label { color: var(--amber); }
+  .legend-item.l-ok .legend-label { color: var(--sage); }
+  .legend-item.l-info .legend-label { color: var(--purple); }
+
+  /* ── Footer ── */
+  .footer {
+    max-width: 1100px; margin: 0 auto; padding: 0 20px 60px;
+    font-family: sans-serif; font-size: 0.78rem; color: var(--text-muted);
+    border-top: 1px solid var(--border); padding-top: 20px; margin-top: 20px;
+  }
+
+  /* ── Utility ── */
+  .full-card { grid-column: 1 / -1; }
+  .mt-8 { margin-top: 8px; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 8px 0 16px; }
+
+  /* ── Language Switcher ── */
+  .lang-switcher { position:absolute; top:22px; right:40px; display:flex; gap:4px; z-index:10; }
+  .lang-btn {
+    padding:4px 14px; border-radius:16px; border:1px solid rgba(255,255,255,.4);
+    background:transparent; color:rgba(255,255,255,.65);
+    font-family:sans-serif; font-size:.75rem; font-weight:700;
+    cursor:pointer; letter-spacing:.06em; transition:all .15s;
+  }
+  .lang-btn:hover { background:rgba(255,255,255,.15); color:#fff; }
+  .lang-btn.active { background:rgba(255,255,255,.22); color:#fff; border-color:rgba(255,255,255,.8); }
+
+</style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══ -->
+<div class="hero">
+  <div class="lang-switcher">
+    <button class="lang-btn active" id="btn-en" onclick="switchLang('en')">EN</button>
+    <button class="lang-btn" id="btn-zh" onclick="switchLang('zh')">中文</button>
+  </div>
+  <div class="hero-inner">
+    <h1 data-i18n="hero-title">Neurodevelopmental Self-Assessment</h1>
+    <div class="subtitle" data-i18n="hero-sub">Compiled 2026-05-23 &nbsp;·&nbsp; 7 validated instruments &nbsp;·&nbsp; Self-report screening only</div>
+    <div class="hero-pills">
+      <span class="pill pill-confirmed" data-i18n="pill-adhd">✓ ADHD – Hyperactive-predominant</span>
+      <span class="pill pill-confirmed" data-i18n="pill-gad">✓ Generalised Anxiety Disorder</span>
+      <span class="pill pill-confirmed" data-i18n="pill-mdd">✓ Major Depressive Disorder</span>
+      <span class="pill pill-hypothesis" data-i18n="pill-asc">⟳ Working hypothesis: Autism Spectrum Condition (high-masking)</span>
+      <span class="pill pill-hypothesis" data-i18n="pill-cptsd">⟳ Suspected cPTSD</span>
+    </div>
+    <div class="hero-note">
+      <span data-i18n="hero-note">This dashboard compiles results from validated self-report screening instruments and informal cognitive tests. Scores indicate the need for formal professional evaluation, not a clinical diagnosis.</span>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ═══ SCORE INTERPRETATION GUIDE ═══ -->
+  <div class="section-title" data-i18n="sec-guide">Score Interpretation Guide</div>
+  <div class="legend-grid">
+    <div class="legend-item l-high">
+      <div class="legend-label" data-i18n="leg-high-lbl">Strong Signal</div>
+      <div class="legend-range" data-i18n="leg-high-rng">Well above threshold</div>
+      <div class="legend-desc" data-i18n="leg-high-dsc">Score substantially exceeds the clinical cut-off. Convergent evidence strongly supports formal evaluation.</div>
+    </div>
+    <div class="legend-item l-mid">
+      <div class="legend-label" data-i18n="leg-mid-lbl">Borderline / Possible</div>
+      <div class="legend-range" data-i18n="leg-mid-rng">Near or at threshold</div>
+      <div class="legend-desc" data-i18n="leg-mid-dsc">Score is at or near the cut-off. Clinically meaningful, particularly when other domains also score high.</div>
+    </div>
+    <div class="legend-item l-ok">
+      <div class="legend-label" data-i18n="leg-ok-lbl">Confirmed Diagnosis</div>
+      <div class="legend-range" data-i18n="leg-ok-rng">Already established</div>
+      <div class="legend-desc" data-i18n="leg-ok-dsc">Instrument confirms a diagnosis already made clinically. Included here to map symptom profile and interactions.</div>
+    </div>
+    <div class="legend-item l-info">
+      <div class="legend-label" data-i18n="leg-info-lbl">Percentile Score</div>
+      <div class="legend-range" data-i18n="leg-info-rng">Population ranking</div>
+      <div class="legend-desc" data-i18n="leg-info-dsc">Shows where the score falls relative to the general population. Very high or very low percentiles indicate outlier patterns.</div>
+    </div>
+  </div>
+
+  <!-- ═══ AT A GLANCE ═══ -->
+  <div class="section-title" data-i18n="sec-glance">At a Glance: All Instruments</div>
+  <div class="glance-grid">
+
+    <div class="glance-card high">
+      <div class="glance-abbr">AQ-50</div>
+      <div class="glance-name" data-i18n="gc-aq-name">Autism Spectrum Quotient</div>
+      <div class="glance-score">35 <span>/ 50</span></div>
+      <div class="glance-threshold" data-i18n="gc-aq-thr">Threshold ≥26 &nbsp;·&nbsp; High specificity ≥32</div>
+      <div class="glance-bar-wrap"><div class="glance-bar high" style="width:70%"></div></div>
+      <span class="glance-signal high" data-i18n="gc-strong-sig">Strong Signal</span>
+    </div>
+
+    <div class="glance-card high">
+      <div class="glance-abbr">RAADS-R</div>
+      <div class="glance-name" data-i18n="gc-raads-name">Ritvo Autism Asperger Diagnostic Scale</div>
+      <div class="glance-score">155 <span>/ 240</span></div>
+      <div class="glance-threshold" data-i18n="gc-raads-thr">Threshold ≥65 &nbsp;·&nbsp; Score is 2.4× threshold</div>
+      <div class="glance-bar-wrap"><div class="glance-bar high" style="width:64.5%"></div></div>
+      <span class="glance-signal high" data-i18n="gc-strong-sig">Strong Signal</span>
+    </div>
+
+    <div class="glance-card high">
+      <div class="glance-abbr">CAT-Q</div>
+      <div class="glance-name" data-i18n="gc-catq-name">Camouflaging Autistic Traits Questionnaire</div>
+      <div class="glance-score">128 <span>/ 175</span></div>
+      <div class="glance-threshold" data-i18n="gc-catq-thr">Autistic women avg ~124 &nbsp;·&nbsp; NT women avg ~100</div>
+      <div class="glance-bar-wrap"><div class="glance-bar high" style="width:73%"></div></div>
+      <span class="glance-signal high" data-i18n="gc-catq-sig">In autistic women range</span>
+    </div>
+
+    <div class="glance-card notable">
+      <div class="glance-abbr">ASRS v1.1</div>
+      <div class="glance-name" data-i18n="gc-asrs-name">Adult ADHD Self-Report Scale</div>
+      <div class="glance-score">6 <span>/ 6</span></div>
+      <div class="glance-threshold" data-i18n="gc-asrs-thr">Part A screener · Ceiling score · Diagnosis confirmed</div>
+      <div class="glance-bar-wrap"><div class="glance-bar notable" style="width:100%"></div></div>
+      <span class="glance-signal notable" data-i18n="gc-asrs-sig">Confirmed Diagnosis</span>
+    </div>
+
+    <div class="glance-card mod">
+      <div class="glance-abbr">TAS-20</div>
+      <div class="glance-name" data-i18n="gc-tas-name">Toronto Alexithymia Scale</div>
+      <div class="glance-score">59 <span>/ 100</span></div>
+      <div class="glance-threshold" data-i18n="gc-tas-thr">Possible ≥52 &nbsp;·&nbsp; Definite ≥61</div>
+      <div class="glance-bar-wrap"><div class="glance-bar mod" style="width:59%"></div></div>
+      <span class="glance-signal mod" data-i18n="gc-borderline-sig">Borderline / Possible</span>
+    </div>
+
+    <div class="glance-card high">
+      <div class="glance-abbr">AASP</div>
+      <div class="glance-name" data-i18n="gc-aasp-av-name">Adult Sensory Profile — Avoiding</div>
+      <div class="glance-score">+4.4 <span>SD</span></div>
+      <div class="glance-threshold" data-i18n="gc-aasp-av-thr">Sensation Avoiding &nbsp;·&nbsp; Much More Than Most</div>
+      <div class="glance-bar-wrap"><div class="glance-bar high" style="width:88%"></div></div>
+      <span class="glance-signal high" data-i18n="gc-aasp-sig">Much More Than Most</span>
+    </div>
+
+    <div class="glance-card high">
+      <div class="glance-abbr">AASP</div>
+      <div class="glance-name" data-i18n="gc-aasp-se-name">Adult Sensory Profile — Sensitivity</div>
+      <div class="glance-score">+3.0 <span>SD</span></div>
+      <div class="glance-threshold" data-i18n="gc-aasp-se-thr">Sensory Sensitivity &nbsp;·&nbsp; Much More Than Most</div>
+      <div class="glance-bar-wrap"><div class="glance-bar high" style="width:75%"></div></div>
+      <span class="glance-signal high" data-i18n="gc-aasp-sig">Much More Than Most</span>
+    </div>
+
+    <div class="glance-card mod">
+      <div class="glance-abbr">MAIA-2</div>
+      <div class="glance-name" data-i18n="gc-maia-name">Interoceptive Awareness: Key Contrast</div>
+      <div class="glance-score">90<span>th</span> / 6<span>th</span></div>
+      <div class="glance-threshold" data-i18n="gc-maia-thr">Body Listening 90th &nbsp;·&nbsp; Not-Worrying 6th</div>
+      <div class="glance-bar-wrap"><div class="glance-bar mod" style="width:60%"></div></div>
+      <span class="glance-signal mod" data-i18n="gc-maia-sig">Distressed-but-attuned</span>
+    </div>
+
+  </div>
+
+  <!-- ═══ AUTISM TRAITS DETAIL ═══ -->
+  <div class="section-title" data-i18n="sec-autism">Autism Traits: Detail</div>
+  <div class="chart-grid">
+
+    <div class="chart-card">
+      <h3 data-i18n="ch-raads-title">RAADS-R Subscales</h3>
+      <div class="chart-desc" data-i18n="ch-raads-desc">Breakdown of the 155/240 total across four domains</div>
+      <div class="chart-wrap"><canvas id="raadsChart"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <h3 data-i18n="ch-catq-title">CAT-Q: Camouflaging Strategies</h3>
+      <div class="chart-desc" data-i18n="ch-catq-desc">How scores compare to neurotypical and autistic women averages</div>
+      <div class="chart-wrap"><canvas id="catqChart"></canvas></div>
+    </div>
+
+    <div class="chart-card full-card">
+      <h3 data-i18n="ch-norm-title">AQ-50 vs. RAADS-R: Population Norm Comparison</h3>
+      <div class="chart-desc" data-i18n="ch-norm-desc">Your scores relative to neurotypical averages and diagnostic thresholds</div>
+      <div class="norm-row">
+        <div class="norm-instrument">AQ-50</div>
+        <div class="norm-bars">
+          <div class="norm-bar-row">
+            <div class="norm-bar-label">NT average (~17)</div>
+            <div class="norm-bar-track">
+              <div class="norm-bar-fill" style="width:34%; background:#d1d5db;"><span></span></div>
+              <div class="norm-threshold-line" style="left:52%"></div>
+            </div>
+            <span style="font-family:sans-serif;font-size:0.75rem;color:var(--text-muted);width:36px;text-align:right;">17</span>
+          </div>
+          <div class="norm-bar-row">
+            <div class="norm-bar-label">Threshold (≥26)</div>
+            <div class="norm-bar-track">
+              <div class="norm-bar-fill" style="width:52%; background:#fcd34d;"><span></span></div>
+            </div>
+            <span style="font-family:sans-serif;font-size:0.75rem;color:var(--text-muted);width:36px;text-align:right;">26</span>
+          </div>
+          <div class="norm-bar-row">
+            <div class="norm-bar-label" style="font-weight:700;color:var(--text);">Your score (35)</div>
+            <div class="norm-bar-track">
+              <div class="norm-bar-fill" style="width:70%; background:var(--coral);"><span>35</span></div>
+            </div>
+            <span style="font-family:sans-serif;font-size:0.75rem;font-weight:700;width:36px;text-align:right;">35</span>
+          </div>
+        </div>
+      </div>
+      <div class="norm-row">
+        <div class="norm-instrument">RAADS-R</div>
+        <div class="norm-bars">
+          <div class="norm-bar-row">
+            <div class="norm-bar-label">NT average (~25)</div>
+            <div class="norm-bar-track">
+              <div class="norm-bar-fill" style="width:10.4%; background:#d1d5db;"></div>
+            </div>
+            <span style="font-family:sans-serif;font-size:0.75rem;color:var(--text-muted);width:36px;text-align:right;">25</span>
+          </div>
+          <div class="norm-bar-row">
+            <div class="norm-bar-label">Threshold (≥65)</div>
+            <div class="norm-bar-track">
+              <div class="norm-bar-fill" style="width:27%; background:#fcd34d;"></div>
+            </div>
+            <span style="font-family:sans-serif;font-size:0.75rem;color:var(--text-muted);width:36px;text-align:right;">65</span>
+          </div>
+          <div class="norm-bar-row">
+            <div class="norm-bar-label" style="font-weight:700;color:var(--text);">Your score (155)</div>
+            <div class="norm-bar-track">
+              <div class="norm-bar-fill" style="width:64.5%; background:var(--coral);"><span>155</span></div>
+            </div>
+            <span style="font-family:sans-serif;font-size:0.75rem;font-weight:700;width:36px;text-align:right;">155</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ ADHD DETAIL ═══ -->
+  <div class="section-title" data-i18n="sec-adhd">ADHD: Symptom Profile (ASRS Part B)</div>
+  <div class="chart-grid">
+    <div class="chart-card full-card">
+      <h3 data-i18n="ch-asrs-title">ASRS Part B: Symptom Severity by Item</h3>
+      <div class="chart-desc" data-i18n="ch-asrs-desc">Part A ceiling (6/6) confirms diagnosis. Part B (10/12) maps the specific symptom landscape.</div>
+      <div class="chart-wrap" style="height:260px;"><canvas id="asrsChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ═══ EMOTIONAL AWARENESS ═══ -->
+  <div class="section-title" data-i18n="sec-tas">Emotional Awareness: TAS-20</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3 data-i18n="ch-tas-title">TAS-20 Subscale Breakdown</h3>
+      <div class="chart-desc" data-i18n="ch-tas-desc">Difficulty identifying and describing feelings are both elevated; externally oriented thinking is low</div>
+      <div class="chart-wrap"><canvas id="tasChart"></canvas></div>
+    </div>
+    <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center;">
+      <h3 data-i18n="ch-tas-pat-title">What the Pattern Means</h3>
+      <div class="chart-desc" style="margin-bottom:16px;" data-i18n="ch-tas-pat-desc">The subscale split matters more than the total score</div>
+      <div style="display:flex;flex-direction:column;gap:12px;font-family:sans-serif;font-size:0.84rem;">
+        <div style="background:var(--coral-light);border-radius:8px;padding:12px 14px;border-left:3px solid var(--coral);">
+          <strong data-i18n="tas-dif-lbl">Difficulty Identifying Feelings: 23</strong><br>
+          <span style="color:#4b5563;" data-i18n="tas-dif-desc">Threshold ~17. Frequently unsure what emotion is present, especially in real time.</span>
+        </div>
+        <div style="background:var(--coral-light);border-radius:8px;padding:12px 14px;border-left:3px solid var(--coral);">
+          <strong data-i18n="tas-ddf-lbl">Difficulty Describing Feelings: 22</strong><br>
+          <span style="color:#4b5563;" data-i18n="tas-ddf-desc">Threshold ~15. Hard to put emotional experience into words even when it feels strong.</span>
+        </div>
+        <div style="background:var(--sage-light);border-radius:8px;padding:12px 14px;border-left:3px solid var(--sage);">
+          <strong data-i18n="tas-eot-lbl">Externally Oriented Thinking: 14</strong><br>
+          <span style="color:#4b5563;" data-i18n="tas-eot-desc">Threshold ~22. Low. You strongly value introspection; the difficulty is signal quality, not motivation.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SENSORY PROFILE ═══ -->
+  <div class="section-title" data-i18n="sec-sensory">Sensory Processing: AASP</div>
+  <div class="sensory-grid">
+    <div class="sensory-quad">
+      <div class="sq-header">
+        <div class="sq-name" data-i18n="sq-av-name">Sensation Avoiding</div>
+        <div class="sq-sd extreme">+4.42 SD</div>
+      </div>
+      <span class="sq-class extreme">Much More Than Most</span>
+      <div class="sq-bar-wrap"><div class="sq-bar extreme" style="width:88%"></div></div>
+      <div class="sq-desc" data-i18n="sq-av-desc">Strong drive to reduce or escape sensory input. Avoiding loud environments, crowds, strong smells, unpredictable contact.</div>
+    </div>
+    <div class="sensory-quad">
+      <div class="sq-header">
+        <div class="sq-name" data-i18n="sq-se-name">Sensory Sensitivity</div>
+        <div class="sq-sd extreme">+3.01 SD</div>
+      </div>
+      <span class="sq-class extreme">Much More Than Most</span>
+      <div class="sq-bar-wrap"><div class="sq-bar extreme" style="width:75%"></div></div>
+      <div class="sq-desc" data-i18n="sq-se-desc">High reactivity to sensory input: noticing and being bothered by stimuli others tune out. Sound, smell, texture, light.</div>
+    </div>
+    <div class="sensory-quad">
+      <div class="sq-header">
+        <div class="sq-name" data-i18n="sq-lr-name">Low Registration</div>
+        <div class="sq-sd high">+1.84 SD</div>
+      </div>
+      <span class="sq-class high">More Than Most</span>
+      <div class="sq-bar-wrap"><div class="sq-bar high" style="width:46%"></div></div>
+      <div class="sq-desc" data-i18n="sq-lr-desc">Some signals don't register until they're intense; low-level cues like hunger or mild pain may go unnoticed early on.</div>
+    </div>
+    <div class="sensory-quad">
+      <div class="sq-header">
+        <div class="sq-name" data-i18n="sq-ss-name">Sensation Seeking</div>
+        <div class="sq-sd mod">+1.11 SD</div>
+      </div>
+      <span class="sq-class mod">More Than Most</span>
+      <div class="sq-bar-wrap"><div class="sq-bar mod" style="width:28%"></div></div>
+      <div class="sq-desc" data-i18n="sq-ss-desc">Actively seeks out certain sensory experiences for regulation: movement, textures, sounds chosen rather than imposed.</div>
+    </div>
+  </div>
+  <div class="card mt-8" style="margin-top:16px;">
+    <p style="font-family:sans-serif;font-size:0.85rem;color:#4b5563;line-height:1.6;">
+      <span data-i18n="key-insight">只许州官放火的李瑞秋：Chosen stimuli are tolerable or sought; the same stimuli when imposed or unpredictable become aversive. Compensatory strategies make the burden invisible to others; the cost is carried internally.</span>
+    </p>
+  </div>
+
+  <div class="chart-card" style="margin-top:16px;">
+    <h3 data-i18n="ch-overload-title">After Sensory Overload: Reported Consequences</h3>
+    <div class="chart-desc" data-i18n="ch-overload-desc">Self-reported aftermath of overload episodes. Recovery takes half a day to a full day; early withdrawal from the trigger shortens this to a few hours.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;">
+      <span style="background:var(--coral-light);border-radius:6px;padding:4px 10px;font-family:sans-serif;font-size:0.8rem;font-weight:600;color:#7f1d1d;" data-i18n="ovl-1">Headache / migraine</span>
+      <span style="background:var(--coral-light);border-radius:6px;padding:4px 10px;font-family:sans-serif;font-size:0.8rem;font-weight:600;color:#7f1d1d;" data-i18n="ovl-2">Shutdown / unable to speak</span>
+      <span style="background:var(--coral-light);border-radius:6px;padding:4px 10px;font-family:sans-serif;font-size:0.8rem;font-weight:600;color:#7f1d1d;" data-i18n="ovl-3">Crying</span>
+      <span style="background:var(--amber-light);border-radius:6px;padding:4px 10px;font-family:sans-serif;font-size:0.8rem;font-weight:600;color:#78350f;" data-i18n="ovl-4">Irritability</span>
+      <span style="background:var(--amber-light);border-radius:6px;padding:4px 10px;font-family:sans-serif;font-size:0.8rem;font-weight:600;color:#78350f;" data-i18n="ovl-5">Fatigue / need to sleep</span>
+      <span style="background:var(--amber-light);border-radius:6px;padding:4px 10px;font-family:sans-serif;font-size:0.8rem;font-weight:600;color:#78350f;" data-i18n="ovl-6">Anxiety spiral / social rumination</span>
+      <span style="background:var(--purple-light);border-radius:6px;padding:4px 10px;font-family:sans-serif;font-size:0.8rem;font-weight:600;color:#3b1f6b;" data-i18n="ovl-7">Muscle tension: neck, shoulder, hip</span>
+    </div>
+    <div style="margin-top:14px;font-family:sans-serif;font-size:0.8rem;color:var(--text-muted);">
+      <span data-i18n="ovl-acc"><strong>Accommodations that help:</strong> earplugs / noise-canceling headphones &nbsp;·&nbsp; sunglasses / low light &nbsp;·&nbsp; comfortable clothing &nbsp;·&nbsp; leaving early &nbsp;·&nbsp; predictable seating and plans</span>
+    </div>
+  </div>
+
+  <!-- ═══ INTEROCEPTION ═══ -->
+  <div class="section-title">Body Awareness & Interoception: MAIA-2</div>
+  <div class="chart-card">
+    <h3 data-i18n="ch-maia-title">MAIA-2 Subscale Percentiles</h3>
+    <div class="chart-desc" data-i18n="ch-maia-desc">Where each subscale falls relative to the general population (100th = highest). The gap between Body Listening and the distress-regulation subscales defines this profile.</div>
+    <div class="perc-list" style="margin-top:16px;">
+      <div class="perc-row">
+        <div class="perc-label" style="font-weight:700;color:var(--sage);" data-i18n="maia-bl">Body Listening</div>
+        <div class="perc-bar-wrap"><div class="perc-bar high" style="width:90%;background:var(--sage);"></div></div>
+        <div class="perc-val">90th</div>
+      </div>
+      <div class="perc-row">
+        <div class="perc-label" data-i18n="maia-sr">Self-Regulation</div>
+        <div class="perc-bar-wrap"><div class="perc-bar mid" style="width:32%;background:var(--amber);"></div></div>
+        <div class="perc-val">32nd</div>
+      </div>
+      <div class="perc-row">
+        <div class="perc-label" data-i18n="maia-ar">Attention Regulation</div>
+        <div class="perc-bar-wrap"><div class="perc-bar mid" style="width:26%;background:var(--amber);"></div></div>
+        <div class="perc-val">26th</div>
+      </div>
+      <div class="perc-row">
+        <div class="perc-label" data-i18n="maia-tr">Trust</div>
+        <div class="perc-bar-wrap"><div class="perc-bar low" style="width:17%;background:var(--coral);"></div></div>
+        <div class="perc-val">17th</div>
+      </div>
+      <div class="perc-row">
+        <div class="perc-label" data-i18n="maia-ea">Emotional Awareness</div>
+        <div class="perc-bar-wrap"><div class="perc-bar low" style="width:14%;background:var(--coral);"></div></div>
+        <div class="perc-val">14th</div>
+      </div>
+      <div class="perc-row">
+        <div class="perc-label" data-i18n="maia-no">Noticing</div>
+        <div class="perc-bar-wrap"><div class="perc-bar low" style="width:12%;background:var(--coral);"></div></div>
+        <div class="perc-val">12th</div>
+      </div>
+      <div class="perc-row">
+        <div class="perc-label" style="font-weight:700;color:var(--coral);" data-i18n="maia-nd">Not-Distracting</div>
+        <div class="perc-bar-wrap"><div class="perc-bar low" style="width:6%;background:var(--coral);"></div></div>
+        <div class="perc-val">6th</div>
+      </div>
+      <div class="perc-row">
+        <div class="perc-label" style="font-weight:700;color:var(--coral);" data-i18n="maia-nw">Not-Worrying</div>
+        <div class="perc-bar-wrap"><div class="perc-bar low" style="width:6%;background:var(--coral);"></div></div>
+        <div class="perc-val">6th</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;background:var(--amber-light);border-radius:8px;padding:14px 16px;font-family:sans-serif;font-size:0.84rem;color:#4b5563;border-left:3px solid var(--amber);">
+      <strong style="color:var(--text);">Body Listening 90th</strong>: always on. &nbsp;<strong style="color:var(--text);">Not-Distracting 6th</strong>: signal cannot be put down.<br>
+      <strong style="color:var(--text);">Not-Worrying 6th</strong>: immediately triggers worry. &nbsp;<strong style="color:var(--text);">Trust 17th</strong>: body feels untrustworthy.
+    </div>
+  </div>
+
+  <div class="chart-grid" style="margin-top:20px;">
+    <div class="chart-card">
+      <h3 data-i18n="ch-body-sig-title">Body Signal Identification: Self-Report</h3>
+      <div class="chart-desc" data-i18n="ch-body-sig-desc">Difficulty varies by signal type, not globally absent. High-arousal and ambiguous states are hardest; low-arousal signals are more accessible.</div>
+      <div class="perc-list" style="margin-top:14px;">
+        <div class="perc-row"><div class="perc-label" style="color:var(--sage);font-weight:700;" data-i18n="bsl-sad" data-i18n="bsl-sad">Sadness</div><div class="perc-bar-wrap"><div class="perc-bar" style="width:85%;background:var(--sage);height:10px;border-radius:4px;"></div></div><div class="perc-val" style="color:var(--sage);" data-i18n="bsl-easy">Easy</div></div>
+        <div class="perc-row"><div class="perc-label" style="color:var(--sage);font-weight:700;" data-i18n="bsl-bath" data-i18n="bsl-bath">Bathroom needs</div><div class="perc-bar-wrap"><div class="perc-bar" style="width:85%;background:var(--sage);height:10px;border-radius:4px;"></div></div><div class="perc-val" style="color:var(--sage);" data-i18n="bsl-easy">Easy</div></div>
+        <div class="perc-row"><div class="perc-label" data-i18n="bsl-fat">Fatigue</div><div class="perc-bar-wrap"><div class="perc-bar" style="width:55%;background:var(--amber);height:10px;border-radius:4px;"></div></div><div class="perc-val" data-i18n="bsl-mixed">Mixed</div></div>
+        <div class="perc-row"><div class="perc-label" data-i18n="bsl-pain">Pain</div><div class="perc-bar-wrap"><div class="perc-bar" style="width:55%;background:var(--amber);height:10px;border-radius:4px;"></div></div><div class="perc-val" data-i18n="bsl-mixed">Mixed</div></div>
+        <div class="perc-row"><div class="perc-label" data-i18n="bsl-anx">Anxiety</div><div class="perc-bar-wrap"><div class="perc-bar" style="width:55%;background:var(--amber);height:10px;border-radius:4px;"></div></div><div class="perc-val" data-i18n="bsl-mixed">Mixed</div></div>
+        <div class="perc-row"><div class="perc-label" style="color:var(--coral);" data-i18n="bsl-thirst" data-i18n="bsl-thirst">Thirst</div><div class="perc-bar-wrap"><div class="perc-bar" style="width:28%;background:var(--coral);height:10px;border-radius:4px;"></div></div><div class="perc-val" style="color:var(--coral);" data-i18n="bsl-difficult">Difficult</div></div>
+        <div class="perc-row"><div class="perc-label" style="color:var(--coral);font-weight:700;" data-i18n="bsl-hunger" data-i18n="bsl-hunger">Hunger</div><div class="perc-bar-wrap"><div class="perc-bar" style="width:10%;background:var(--coral);height:10px;border-radius:4px;"></div></div><div class="perc-val" style="color:var(--coral);" data-i18n="bsl-very-hard">Very hard</div></div>
+        <div class="perc-row"><div class="perc-label" style="color:var(--coral);font-weight:700;" data-i18n="bsl-anger" data-i18n="bsl-anger">Anger</div><div class="perc-bar-wrap"><div class="perc-bar" style="width:10%;background:var(--coral);height:10px;border-radius:4px;"></div></div><div class="perc-val" style="color:var(--coral);" data-i18n="bsl-very-hard">Very hard</div></div>
+        <div class="perc-row"><div class="perc-label" style="color:var(--coral);font-weight:700;" data-i18n="bsl-excite" data-i18n="bsl-excite">Excitement</div><div class="perc-bar-wrap"><div class="perc-bar" style="width:10%;background:var(--coral);height:10px;border-radius:4px;"></div></div><div class="perc-val" style="color:var(--coral);" data-i18n="bsl-very-hard">Very hard</div></div>
+      </div>
+      <div style="margin-top:12px;font-family:sans-serif;font-size:0.78rem;color:var(--text-muted);" data-i18n="bsl-note">Bars show ease of identification; longer = easier to detect. Hunger, anger, and excitement are the hardest; these are all high-arousal or ambiguous states.</div>
+    </div>
+
+    <div class="chart-card">
+      <h3 data-i18n="ch-therapy-title">Therapy Fit: Body-Based Approaches</h3>
+      <div class="chart-desc" data-i18n="ch-therapy-desc">Not all somatic work is equal. The distinction is whether it attends to emotion in the body (which amplifies distress) or uses purely physical regulation.</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px;font-family:sans-serif;font-size:0.84rem;">
+        <div style="background:var(--coral-light);border-radius:8px;padding:13px 15px;border-left:3px solid var(--coral);">
+          <div style="font-weight:700;color:var(--coral);margin-bottom:4px;" data-i18n="th-poor-1">⚠ Poorly tolerated</div>
+          <span data-i18n="th-card1-body"><strong>Emotion-focused body scans</strong>: "notice where you feel the emotion"<br>
+          <span style="color:#4b5563;">Attending to emotion in the body amplifies pain and distress. <em>"The more I feel it, the more it hurts."</em></span></span>
+        </div>
+        <div style="background:var(--coral-light);border-radius:8px;padding:13px 15px;border-left:3px solid var(--coral);">
+          <div style="font-weight:700;color:var(--coral);margin-bottom:4px;" data-i18n="th-poor-2">⚠ Poorly tolerated</div>
+          <span data-i18n="th-card2-body"><strong>Open meditation</strong>: "breathe into the sensation"<br>
+          <span style="color:#4b5563;">Difficulty focusing; emotional activation too diffuse and painful to sit with.</span></span>
+        </div>
+        <div style="background:var(--sage-light);border-radius:8px;padding:13px 15px;border-left:3px solid var(--sage);">
+          <div style="font-weight:700;color:var(--sage);margin-bottom:4px;" data-i18n="th-good-1">✓ Works well</div>
+          <span data-i18n="th-card3-body"><strong>Progressive muscle relaxation (PMR)</strong>: tense and release, toes to head<br>
+          <span style="color:#4b5563;">Non-emotional, structured, sequential. Effective before sleep. Preferred self-regulation tool.</span></span>
+        </div>
+        <div style="background:var(--sage-light);border-radius:8px;padding:13px 15px;border-left:3px solid var(--sage);">
+          <div style="font-weight:700;color:var(--sage);margin-bottom:4px;" data-i18n="th-good-2">✓ Preferred</div>
+          <span data-i18n="th-card4-body"><strong>Physical fixes</strong>: painkillers, heat pad<br>
+          <span style="color:#4b5563;">Direct somatic intervention without emotional processing component. Effective for managing chronic tension and overload aftereffects.</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ COGNITIVE PROFILE ═══ -->
+  <div class="section-title" data-i18n="sec-cog">Cognitive Profile: TestMyBrain</div>
+  <div class="chart-grid">
+    <div class="chart-card full-card">
+      <h3 data-i18n="ch-cog-title">Cognitive Percentiles by Domain</h3>
+      <div class="chart-desc" data-i18n="ch-cog-desc">Research-grade tools validated at group level. The defining feature is the gap between reasoning depth and processing speed.</div>
+      <div class="chart-wrap" style="height:260px;"><canvas id="cogChart"></canvas></div>
+    </div>
+  </div>
+  <div class="card mt-8" style="margin-top:16px;">
+    <p style="font-family:sans-serif;font-size:0.85rem;color:#4b5563;line-height:1.6;" data-i18n="cog-note">
+      <strong style="color:var(--text);">What this means:</strong> Verbal memory (90th), visual change detection (90th), and visual reasoning (80th) sit alongside processing speed and visuospatial working memory at the 20th percentile. The variation reflects <strong>automaticity</strong>. Strong at depth, pattern, and meaning. Slower at rapid output, multistep working memory, and sustained routine execution.
+    </p>
+  </div>
+
+  <!-- ═══ DAILY LIFE IMPACT ═══ -->
+  <div class="section-title" data-i18n="sec-daily">Daily Life Impact: Observations by Domain</div>
+  <div class="callout-grid">
+
+    <div class="callout purple">
+      <div class="callout-domain" data-i18n="co-social-dom">Social · RAADS-R + CAT-Q</div>
+      <h4 data-i18n="co-social-h">Social effort is invisible from the outside</h4>
+      <p data-i18n="co-social-p">Running three camouflaging strategies simultaneously (Compensation, Masking, Assimilation) is more cognitively expensive than relying on one. Social situations that look "fine" can be genuinely exhausting. Recovery time after social events is real and necessary.</p>
+    </div>
+
+    <div class="callout amber">
+      <div class="callout-domain" data-i18n="co-interests-dom">Interests · ADHD + Autism interaction</div>
+      <h4 data-i18n="co-interests-h">A graveyard of hobbies ≠ shallow interests</h4>
+      <p data-i18n="co-interests-p">ADHD generates novelty-seeking; autism generates deep investment in meaning and pattern. The result is high-intensity bursts of engagement, apparent abandonment, and periodic return. The interests are real; the fuel system is impaired, not the interest itself.</p>
+    </div>
+
+    <div class="callout coral">
+      <div class="callout-domain" data-i18n="co-emotions-dom">Emotions · TAS-20 + MAIA-2</div>
+      <h4 data-i18n="co-emotions-h">"Something is wrong" without knowing what</h4>
+      <p data-i18n="co-emotions-p">Frequently feel something strongly, but the signal doesn't reliably translate into a nameable emotion. The antenna is aimed inward and the motivation is strong; the signal is degraded. This is introspective alexithymia, not emotional disengagement.</p>
+    </div>
+
+    <div class="callout">
+      <div class="callout-domain" data-i18n="co-sensory-dom">Sensory · AASP</div>
+      <h4 data-i18n="co-sensory-h">Chronic background management effort</h4>
+      <p data-i18n="co-sensory-p">Compensatory strategies (closing doors, noise-blocking, managing exposure) work well enough that the sensory burden is invisible to others. The cost compounds over a day or week into significant fatigue, unnoticed by others.</p>
+    </div>
+
+    <div class="callout teal">
+      <div class="callout-domain" data-i18n="co-body-dom">Body · MAIA-2 + AASP</div>
+      <h4 data-i18n="co-body-h">Same regulatory difficulty: inward and outward</h4>
+      <p data-i18n="co-body-p">The sensory profile (cannot filter external input) and the interoceptive profile (cannot filter internal signals) describe the same underlying pattern at two levels simultaneously. This is one problem, not two separate ones.</p>
+    </div>
+
+    <div class="callout purple">
+      <div class="callout-domain" data-i18n="co-cog-dom">Cognition · TestMyBrain</div>
+      <h4 data-i18n="co-cog-h">Speed gap feels disorienting in routine environments</h4>
+      <p data-i18n="co-cog-p">Exceptional at depth, pattern recognition, and complex analysis. Below average when tasks require speed, clerical processing, or multistep working memory. The environment often rewards speed over depth, making the mismatch disproportionately visible.</p>
+    </div>
+
+    <div class="callout amber">
+      <div class="callout-domain" data-i18n="co-achiev-dom">Achievement · Self-report (Q61)</div>
+      <h4 data-i18n="co-achiev-h">Good grades masked unrealized potential</h4>
+      <p data-i18n="co-achiev-p">"I had good grades, yes. But I never feel like I achieved my full potential — I had so many projects and goals that never materialized because I was not able to reach out and connect with people/resources, or to focus on my strengths instead of trying to make up for my weaknesses." Academic performance is not a proxy for low impairment. The hidden cost was in resource-seeking, self-advocacy, sustained execution, and converting ideas into completed projects.</p>
+    </div>
+
+    <div class="callout coral">
+      <div class="callout-domain" data-i18n="co-emo2-dom">Emotions · Self-report (Part 8)</div>
+      <h4 data-i18n="co-emo2-h">Anger and excitement are the hardest emotions to identify</h4>
+      <p data-i18n="co-emo2-p">Sadness is relatively easy to detect. Anger and excitement (both high-arousal states) are very difficult in the moment, and are typically understood only later through logical analysis of the situation. Emotional processing is retrospective and analytic, not immediate and felt. The complexity is real: "my emotions are very complex, so I don't like to think about them all the time and dissect every layer."</p>
+    </div>
+
+  </div>
+
+  <!-- ═══ MYTH BUSTING ═══ -->
+  <div class="section-title" data-i18n="sec-myths">Busting Common AuDHD / ASC Misconceptions</div>
+  <div class="myth-list">
+
+    <div class="myth-card">
+      <div class="myth-content">
+        <div class="myth-myth" data-i18n="myth1-title">"You can't be autistic if you don't have one encyclopaedic special interest."</div>
+        <div class="myth-truth" data-i18n="myth1-truth">This is the exact basis on which a previous clinician dismissed the autism question; it is not a valid criterion. DSM-5 requires at least two of four RRB categories; a single focused interest is only one of them. The other three (repetitive behaviours, insistence on sameness, and sensory reactivity) are all strongly present here. "Special interest" is also widely misunderstood as requiring encyclopaedic expertise in a narrow domain. <mark style="background:var(--purple-light);color:var(--purple);font-weight:700;padding:1px 5px;border-radius:3px;">The actual criterion is high-intensity, recurring engagement that serves a regulatory or meaning-making function.</mark> Probable candidates in this profile include psychology, language, social rules, ethics, authentic relationships, and meaning systems — none of which look like a trivia collection, but all of which are driven by the same investment. ADHD further disrupts the appearance: interest is real, the fuel system is impaired.</div>
+        <span class="myth-badge" data-i18n="myth1-badge">Addressed in Section 1.2 + patient conversation</span>
+      </div>
+    </div>
+
+    <div class="myth-card">
+      <div class="myth-content">
+        <div class="myth-myth" data-i18n="myth2-title">"You'd know if you were autistic. It's obvious."</div>
+        <div class="myth-truth" data-i18n="myth2-truth">High-masking presentations, especially in women, are frequently missed for years or decades. The CAT-Q score (128) places this profile in the autistic women range precisely because of extensive compensatory effort. The ADHD hyperactivity is visible to clinicians; the autism underneath it is compensated for. <mark style="background:var(--purple-light);color:var(--purple);font-weight:700;padding:1px 5px;border-radius:3px;">This is a common pathway to late recognition, not evidence against the diagnosis.</mark></div>
+        <span class="myth-badge" data-i18n="myth2-badge">Addressed in Section 2.2</span>
+      </div>
+    </div>
+
+    <div class="myth-card">
+      <div class="myth-content">
+        <div class="myth-myth" data-i18n="myth3-title">"Alexithymia means you don't care about emotions."</div>
+        <div class="myth-truth" data-i18n="myth3-truth">The TAS-20 subscale split is essential here. Externally Oriented Thinking scores low (14, well below threshold of ~22), indicating no disengagement from emotional life. <mark style="background:var(--purple-light);color:var(--purple);font-weight:700;padding:1px 5px;border-radius:3px;">The difficulty is identifying and describing feelings, not valuing them.</mark> You strongly endorse that emotional awareness matters. This is introspective alexithymia: the motivation is present, the signal quality is degraded.</div>
+        <span class="myth-badge" data-i18n="myth3-badge">Addressed in Section 3.2</span>
+      </div>
+    </div>
+
+    <div class="myth-card">
+      <div class="myth-content">
+        <div class="myth-myth" data-i18n="myth4-title">"If you cope well or got good grades, you don't need a diagnosis."</div>
+        <div class="myth-truth" data-i18n="myth4-truth">Coping strategies and academic performance can both look strong from the outside while carrying hidden costs internally. <mark style="background:var(--purple-light);color:var(--purple);font-weight:700;padding:1px 5px;border-radius:3px;">Good grades can coexist with significant hidden impairment in resource-seeking, self-advocacy, social navigation, sustained execution, and converting potential into realized outcomes.</mark> The pattern is high intelligence and strong compensation covering real difficulty, not low impairment. <mark style="background:var(--purple-light);color:var(--purple);font-weight:700;padding:1px 5px;border-radius:3px;">The question for formal evaluation is not whether you are functioning, but whether recognising this profile would lead to better support, better self-understanding, and better-fitted treatment.</mark></div>
+        <span class="myth-badge" data-i18n="myth4-badge">Addressed in Section 7.3 · patient self-report (Q61)</span>
+      </div>
+    </div>
+
+    <div class="myth-card">
+      <div class="myth-content">
+        <div class="myth-myth" data-i18n="myth5-title">"Anxiety and depression explain everything. No need to look further."</div>
+        <div class="myth-truth" data-i18n="myth5-truth">GAD and MDD are real and the distress is real. What remains clinically open is the sequence: did anxiety and depression emerge as standalone conditions, or did they accumulate as consequences of navigating an unrecognised neurodevelopmental profile? <mark style="background:var(--purple-light);color:var(--purple);font-weight:700;padding:1px 5px;border-radius:3px;">This matters for treatment: approaches for primary anxiety and depression differ from those suited to anxiety driven by sensory overload, masking exhaustion, and autistic burnout.</mark></div>
+        <span class="myth-badge" data-i18n="myth5-badge">Addressed in Section 7.2</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ NEXT STEPS ═══ -->
+  <div class="section-title" data-i18n="sec-next">Next Steps</div>
+  <div class="next-grid">
+
+    <div class="chart-card">
+      <h3 data-i18n="next-title-1">Recommended Further Assessments</h3>
+      <div class="chart-desc" style="margin-bottom:16px;" data-i18n="next-sub-1">Prioritised by urgency for clinical planning</div>
+      <table class="next-table">
+        <thead>
+          <tr>
+            <th data-i18n="next-th-instrument">Instrument</th>
+            <th data-i18n="next-th-domain">Domain</th>
+            <th data-i18n="next-th-priority">Priority</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>ITQ</strong></td>
+            <td data-i18n="next-row1-domain">cPTSD</td>
+            <td><span class="priority-high" data-i18n="pri-high">High</span></td>
+          </tr>
+          <tr>
+            <td><strong>Autistic Burnout Measure</strong></td>
+            <td data-i18n="next-row2-domain">Burnout vs MDD</td>
+            <td><span class="priority-high" data-i18n="pri-high">High</span></td>
+          </tr>
+          <tr>
+            <td><strong>Beighton Score</strong></td>
+            <td data-i18n="next-row3-domain">Hypermobility (hEDS/HSD)</td>
+            <td><span class="priority-med" data-i18n="pri-med">Medium</span></td>
+          </tr>
+          <tr>
+            <td><strong>PHQ-9 / GAD-7</strong></td>
+            <td data-i18n="next-row4-domain">Depression / Anxiety severity</td>
+            <td><span class="priority-med" data-i18n="pri-med">Medium</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="chart-card">
+      <h3 data-i18n="next-title-2">Questions to Bring to a Clinician</h3>
+      <div class="chart-desc" style="margin-bottom:16px;" data-i18n="next-sub-2">Key lines of inquiry for a formal assessment appointment</div>
+      <ul class="q-list">
+        <li data-i18n="next-q1"><span class="q-num">1.</span> What early patterns did family or teachers notice? Sensory sensitivities, social confusion, intense interests, difficulty with transitions?</li>
+        <li data-i18n="next-q2"><span class="q-num">2.</span> After social events, how much recovery time is needed? Is there post-event replaying of conversations?</li>
+        <li data-i18n="next-q3"><span class="q-num">3.</span> What happens when routines are disrupted? What self-regulatory behaviours are present?</li>
+        <li data-i18n="next-q4"><span class="q-num">4.</span> Did anxiety and depression emerge independently, or in response to periods of increased masking load?</li>
+        <li data-i18n="next-q5"><span class="q-num">5.</span> What environments are avoided? What is the recovery time after unavoidable sensory exposure?</li>
+      </ul>
+    </div>
+
+  </div>
+
+</div><!-- /main -->
+
+<div class="footer">
+  <p data-i18n="footer">Self-assessment compiled 2026-05-23 &nbsp;·&nbsp; Not a clinical diagnosis &nbsp;·&nbsp; Formal neuropsychological evaluation recommended &nbsp;·&nbsp; Instruments: AQ-50, RAADS-R, CAT-Q, ASRS v1.1, TAS-20, AASP, MAIA-2</p>
+  <a href="../../Desktop/raw_data_spreadsheet.html"
+     style="display:inline-block;margin-top:12px;font-family:sans-serif;font-size:.78rem;font-weight:600;
+            color:var(--sage);text-decoration:none;border:1px solid var(--sage);
+            padding:4px 14px;border-radius:20px;letter-spacing:.03em;"
+     onmouseover="this.style.background='var(--sage-light)'" onmouseout="this.style.background='transparent'" data-i18n="footer-link">
+    View raw questionnaire data →
+  </a>
+</div>
+
+<script>
+const fontFamily = "'Helvetica Neue', Arial, sans-serif";
+Chart.defaults.font.family = fontFamily;
+Chart.defaults.color = '#6b7280';
+
+// ── RAADS-R Subscales ──
+new Chart(document.getElementById('raadsChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Social\nRelatedness', 'Sensory/\nMotor', 'Circumscribed\nInterests', 'Language'],
+    datasets: [{
+      label: 'Score',
+      data: [79, 46, 18, 12],
+      backgroundColor: ['#e05c4b', '#e05c4b', '#d97706', '#6e5fa0'],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#f0ede8' }, max: 100 },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ── CAT-Q ──
+new Chart(document.getElementById('catqChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Compensation', 'Masking', 'Assimilation'],
+    datasets: [
+      {
+        label: 'NT Women avg',
+        data: [33, 33, 34],
+        backgroundColor: '#d1d5db',
+        borderRadius: 4,
+      },
+      {
+        label: 'Autistic Women avg',
+        data: [41, 41, 42],
+        backgroundColor: '#a78bfa',
+        borderRadius: 4,
+      },
+      {
+        label: 'Your Score',
+        data: [45, 39, 44],
+        backgroundColor: '#e05c4b',
+        borderRadius: 4,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#f0ede8' }, max: 60 },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ── ASRS Part B ──
+new Chart(document.getElementById('asrsChart'), {
+  type: 'bar',
+  data: {
+    labels: [
+      'Difficulty\nwinding down',
+      'Restlessness\nin quiet',
+      'Difficulty\nunwinding',
+      'Talking\ntoo much',
+      'Finishing\nothers sentences',
+      'Difficulty\nwaiting turn',
+      'Interrupting\nothers',
+      'Distr. by\nnoise/activity',
+      'Concentrating\nwhen spoken to',
+      'Leaving seat\nwhen expected'
+    ],
+    datasets: [{
+      label: 'Frequency',
+      data: [4, 4, 4, 4, 4, 4, 4, 4, 1, 4],
+      backgroundColor: (ctx) => ctx.raw === 1 ? '#6e5fa0' : '#e05c4b',
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const map = ['Never','Rarely','Sometimes','Often','Very Often'];
+            return map[ctx.raw] || ctx.raw;
+          }
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true, max: 4, grid: { color: '#f0ede8' },
+        ticks: {
+          callback: (v) => ['Never','Rarely','Sometimes','Often','Very Often'][v]
+        }
+      },
+      x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+    }
+  }
+});
+
+// ── TAS-20 ──
+new Chart(document.getElementById('tasChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Difficulty\nIdentifying', 'Difficulty\nDescribing', 'Externally\nOriented'],
+    datasets: [
+      {
+        label: 'Your Score',
+        data: [23, 22, 14],
+        backgroundColor: ['#e05c4b', '#e05c4b', '#4a7b6e'],
+        borderRadius: 6,
+      },
+      {
+        label: 'Threshold',
+        data: [17, 15, 22],
+        backgroundColor: ['rgba(0,0,0,0.08)', 'rgba(0,0,0,0.08)', 'rgba(0,0,0,0.08)'],
+        borderRadius: 6,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } } },
+    scales: {
+      y: { beginAtZero: true, max: 35, grid: { color: '#f0ede8' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ── Cognitive Profile ──
+new Chart(document.getElementById('cogChart'), {
+  type: 'bar',
+  data: {
+    labels: [
+      'Verbal Memory', 'Visual Change\nDetection', 'Visual\nReasoning',
+      'Location\nMemory', 'Processing\nSpeed (1)', 'Processing\nSpeed (2)', 'Visuospatial\nWorking Mem.'
+    ],
+    datasets: [{
+      label: 'Percentile',
+      data: [90, 90, 80, 30, 20, 20, 20],
+      backgroundColor: [
+        '#4a7b6e', '#4a7b6e', '#4a7b6e',
+        '#d97706',
+        '#e05c4b', '#e05c4b', '#e05c4b'
+      ],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: (ctx) => `${ctx.raw}th percentile` } }
+    },
+    scales: {
+      y: {
+        beginAtZero: true, max: 100, grid: { color: '#f0ede8' },
+        ticks: { callback: (v) => `${v}th` }
+      },
+      x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+    }
+  }
+});
+</script>
+
+<script>
+// ── Translations ──
+const zh = {
+  "hero-title": "神经发育自我评估",
+  "hero-sub": "编制于2026-05-23 &nbsp;·&nbsp; 7项验证工具 &nbsp;·&nbsp; 仅供自我报告筛查",
+  "pill-adhd": "✓ 注意缺陷多动障碍（多动为主型）",
+  "pill-gad": "✓ 广泛性焦虑障碍",
+  "pill-mdd": "✓ 重度抑郁障碍",
+  "pill-asc": "⟳ 工作假设：自闭症谱系障碍（高度伪装型）",
+  "pill-cptsd": "⟳ 疑似复杂性创伤后应激障碍",
+  "hero-note": "本仪表板汇集了经过验证的自我报告筛查工具及非正式认知测试的结果。各分数提示需进行正式专业评估，不构成临床诊断。",
+
+  "sec-guide": "评分解读指南",
+  "sec-glance": "总览：所有评估工具",
+  "sec-autism": "自闭特质：详细数据",
+  "sec-adhd": "注意缺陷多动障碍：症状概况（ASRS B部分）",
+  "sec-tas": "情绪觉察：TAS-20",
+  "sec-sensory": "感觉处理：AASP",
+  "sec-maia": "身体觉察与内感受：MAIA-2",
+  "sec-cog": "认知概况：TestMyBrain",
+  "sec-daily": "日常生活影响：各领域观察",
+  "sec-myths": "驳斥常见AuDHD / ASC误解",
+  "sec-next": "下一步",
+
+  "leg-high-lbl": "强信号",
+  "leg-high-rng": "显著超过临界值",
+  "leg-high-dsc": "分数显著超过临床临界值，汇聚证据强烈支持进行正式评估。",
+  "leg-mid-lbl": "临界 / 可能",
+  "leg-mid-rng": "接近或达到临界值",
+  "leg-mid-dsc": "分数处于或接近临界值，具有临床意义，尤其当其他领域分数也偏高时。",
+  "leg-ok-lbl": "已确诊",
+  "leg-ok-rng": "已由临床确认",
+  "leg-ok-dsc": "工具确认了已由临床确立的诊断，此处纳入以描绘症状概况及其交互作用。",
+  "leg-info-lbl": "百分位分数",
+  "leg-info-rng": "人群排名",
+  "leg-info-dsc": "显示分数在一般人群中的位置，极高或极低的百分位数提示异常模式。",
+
+  "gc-aq-name": "自闭症谱系商数",
+  "gc-raads-name": "里特沃自闭症阿斯伯格诊断量表",
+  "gc-catq-name": "自闭特质伪装问卷",
+  "gc-asrs-name": "成人注意缺陷多动障碍自我报告量表",
+  "gc-tas-name": "多伦多述情障碍量表",
+  "gc-aasp-av-name": "成人感觉特征量表——感觉回避",
+  "gc-aasp-se-name": "成人感觉特征量表——感觉敏感",
+  "gc-maia-name": "内感受觉：关键对比",
+  "gc-aq-thr": "临界值≥26 &nbsp;·&nbsp; 高特异性≥32",
+  "gc-raads-thr": "临界值≥65 &nbsp;·&nbsp; 得分为临界值的2.4倍",
+  "gc-catq-thr": "自闭症女性均值~124 &nbsp;·&nbsp; 神经典型女性均值~100",
+  "gc-asrs-thr": "A部分筛查 · 满分 · 诊断已确认",
+  "gc-tas-thr": "可能≥52 &nbsp;·&nbsp; 确定≥61",
+  "gc-aasp-av-thr": "感觉回避 &nbsp;·&nbsp; 远高于大多数人",
+  "gc-aasp-se-thr": "感觉敏感 &nbsp;·&nbsp; 远高于大多数人",
+  "gc-maia-thr": "身体聆听第90百分位 &nbsp;·&nbsp; 不担忧第6百分位",
+  "gc-catq-sig": "处于自闭症女性范围",
+  "gc-asrs-sig": "已确诊",
+  "gc-maia-sig": "痛苦但敏锐",
+
+  "ch-raads-title": "RAADS-R 分量表",
+  "ch-catq-title": "CAT-Q：伪装策略",
+  "ch-norm-title": "AQ-50 vs. RAADS-R：人群常模比较",
+  "ch-asrs-title": "ASRS B部分：各题目症状严重程度",
+  "ch-tas-title": "TAS-20 分量表分析",
+  "ch-tas-pat-title": "模式解读",
+  "ch-maia-title": "MAIA-2 分量表百分位",
+  "ch-body-sig-title": "身体信号识别：自我报告",
+  "ch-therapy-title": "疗法适配性：躯体疗法",
+  "ch-cog-title": "各领域认知百分位",
+  "ch-overload-title": "感觉过载后：自报后果",
+  "ch-raads-desc": "155/240总分在四个领域的分布",
+  "ch-catq-desc": "与神经典型及自闭症女性均值的比较",
+  "ch-norm-desc": "得分相对于神经典型均值和诊断临界值的位置",
+  "ch-asrs-desc": "A部分满分（6/6）确认诊断，B部分（10/12）描绘具体症状分布。",
+  "ch-tas-desc": "TAS-20分量表的分项分析",
+  "ch-tas-pat-desc": "分量表差异比总分更具意义",
+  "ch-maia-desc": "各分量表在一般人群中的位置（第100百分位=最高），身体聆听与痛苦调节分量表之间的差距定义了此概况。",
+  "ch-body-sig-desc": "识别难度因信号类型而异。高唤醒和模糊状态最难识别；低唤醒信号相对易于察觉。",
+  "ch-therapy-desc": "并非所有躯体疗法效果相同。区别在于是否涉及对身体情绪的关注（会放大痛苦），还是纯粹的生理调节。",
+  "ch-cog-desc": "经研究验证的群体水平工具，核心特征是推理深度与处理速度之间的差距。",
+  "ch-overload-desc": "感觉过载后的自报后果，完全恢复需半天至一天；提前脱离触发情境可将时间缩短至数小时。",
+
+  "tas-dif-lbl": "情感识别困难：23",
+  "tas-ddf-lbl": "情感描述困难：22",
+  "tas-eot-lbl": "外向性思维：14",
+  "tas-dif-desc": "临界值约17。经常不确定当下存在何种情绪，尤其是实时状态。",
+  "tas-ddf-desc": "临界值约15。即便情感强烈，也难以用语言表达情绪体验。",
+  "tas-eot-desc": "临界值约22。偏低。你高度重视内省；困难在于信号质量，而非动机。",
+
+  "sq-av-name": "感觉回避",
+  "sq-se-name": "感觉敏感",
+  "sq-lr-name": "低登记",
+  "sq-ss-name": "感觉寻求",
+  "sq-av-desc": "强烈驱动减少或逃避感觉输入，回避嘈杂环境、人群、强烈气味及不可预测的接触。",
+  "sq-se-desc": "对感觉输入高度反应，注意并受到他人忽略的刺激困扰。声音、气味、质地、光线。",
+  "sq-lr-desc": "部分信号须强烈才能被察觉；饥饿或轻微疼痛等低级别信号早期可能被忽视。",
+  "sq-ss-desc": "主动寻求特定感觉体验以自我调节：偏好主动选择的运动、质地和声音，而非被动接受。",
+
+  "key-insight": "只许州官放火的李瑞秋：主动选择的刺激可以忍受甚至渴求；同样的刺激一旦被强加或无法预测，便会产生厌恶感。补偿策略使他人看不见这一负担，代价由内而独自承担。",
+
+  "ovl-1": "头痛 / 偏头痛",
+  "ovl-2": "关机 / 无法言语",
+  "ovl-3": "哭泣",
+  "ovl-4": "烦躁",
+  "ovl-5": "疲劳 / 需要睡眠",
+  "ovl-6": "焦虑螺旋 / 社交反刍",
+  "ovl-7": "肌肉紧张：颈部、肩部、髋部",
+  "ovl-acc": "<strong>有效的调适措施：</strong>耳塞/降噪耳机 &nbsp;·&nbsp; 墨镜/低光线 &nbsp;·&nbsp; 舒适衣物 &nbsp;·&nbsp; 提前离场 &nbsp;·&nbsp; 可预测的座位安排和计划",
+
+  "maia-bl": "身体聆听",
+  "maia-sr": "自我调节",
+  "maia-ar": "注意力调节",
+  "maia-tr": "信任",
+  "maia-ea": "情绪觉察",
+  "maia-no": "觉察",
+  "maia-nd": "不分散注意",
+  "maia-nw": "不担忧",
+
+  "bsl-sad": "悲伤",
+  "bsl-bath": "如厕需求",
+  "bsl-fat": "疲劳",
+  "bsl-pain": "疼痛",
+  "bsl-anx": "焦虑",
+  "bsl-thirst": "口渴",
+  "bsl-hunger": "饥饿",
+  "bsl-anger": "愤怒",
+  "bsl-excite": "兴奋",
+  "bsl-note": "柱形长度代表识别容易程度——越长越容易。饥饿、愤怒和兴奋最难识别，均为高唤醒或模糊状态。",
+
+  "th-poor-1": "⚠ 耐受性差",
+  "th-poor-2": "⚠ 耐受性差",
+  "th-good-1": "✓ 效果良好",
+  "th-good-2": "✓ 首选",
+
+  "cog-note": "<strong style=\"color:var(--text);\">这意味着：</strong>语言记忆（第90百分位）、视觉变化检测（第90百分位）和视觉推理（第80百分位）与处于第20百分位的处理速度和视觉空间工作记忆并存。差异体现的是<strong>自动化程度</strong>。在深度、模式与意义上表现突出；在快速输出、多步骤工作记忆和持续常规执行上较慢。",
+
+  "co-social-dom": "社交 · RAADS-R + CAT-Q",
+  "co-social-h": "社交付出对外不可见",
+  "co-interests-dom": "兴趣 · 注意缺陷多动障碍 + 自闭特质的交互",
+  "co-interests-h": "爱好的坟场 ≠ 兴趣肤浅",
+  "co-emotions-dom": "情绪 · TAS-20 + MAIA-2",
+  "co-emotions-h": "「感觉不对」但不知道为何",
+  "co-sensory-dom": "感觉 · AASP",
+  "co-sensory-h": "持续的后台管理消耗",
+  "co-body-dom": "身体 · MAIA-2 + AASP",
+  "co-body-h": "相同的调节困难：内外并存",
+  "co-cog-dom": "认知 · TestMyBrain",
+  "co-cog-h": "速度差距在常规环境中令人迷失",
+  "co-achiev-dom": "成就 · 自我报告（Q61）",
+  "co-achiev-h": "良好的成绩掩盖了未实现的潜力",
+  "co-emo2-dom": "情绪 · 自我报告（第8部分）",
+  "co-emo2-h": "愤怒和兴奋是最难识别的情绪",
+
+  "myth1-title": "「没有百科全书式的特殊兴趣，就不可能是自闭症。」",
+  "myth2-title": "「如果你是自闭症，自己会知道——很明显的。」",
+  "myth3-title": "「述情障碍意味着你不在乎情绪。」",
+  "myth4-title": "「如果你应对得好，或成绩优秀，就不需要诊断。」",
+  "myth5-title": "「焦虑和抑郁能解释一切，无需进一步探查。」",
+
+  "next-title-1": "建议的进一步评估",
+  "next-sub-1": "按临床规划的紧迫性排序",
+  "next-title-2": "带给临床医生的问题",
+  "next-sub-2": "正式评估预约的关键问询方向",
+
+  "footer": "自我评估编制于2026-05-23 &nbsp;·&nbsp; 非临床诊断 &nbsp;·&nbsp; 建议进行正式神经心理学评估 &nbsp;·&nbsp; 工具：AQ-50、RAADS-R、CAT-Q、ASRS v1.1、TAS-20、AASP、MAIA-2",
+  "footer-link": "查看原始问卷数据 →",
+  // Glance signals
+  "gc-strong-sig": "强信号",
+  "gc-borderline-sig": "临界 / 可能",
+  "gc-aasp-sig": "远高于大多数人",
+
+  // TAS chart desc
+  "ch-tas-desc": "情感识别和描述困难均偏高；外向性思维偏低",
+
+  // Body signal difficulty levels
+  "bsl-easy": "容易",
+  "bsl-mixed": "一般",
+  "bsl-difficult": "困难",
+  "bsl-very-hard": "很难",
+
+  // Myth source badges
+  "myth1-badge": "见第1.2节 + 患者对话",
+  "myth2-badge": "见第2.2节",
+  "myth3-badge": "见第3.2节",
+  "myth4-badge": "见第7.3节 · 患者自述（Q61）",
+  "myth5-badge": "见第7.2节",
+
+  // Myth truth paragraphs
+  "myth1-truth": "这正是某位前临床医生否定自闭症问题的依据，但这一标准本身并不成立。DSM-5要求四类限制性重复行为（RRB）中至少符合两类；单一的特殊兴趣只是其中之一。其余三类（重复行为、坚持一致性、感觉反应）在此均有强烈体现。「特殊兴趣」在大众认知中也常被误解为必须是某一狭窄领域的百科全书式知识。<mark style=\"background:var(--purple-light);color:var(--purple);font-weight:700;padding:1px 5px;border-radius:3px;\">实际标准是：高强度、反复出现、服务于调节或意义建构功能的投入。</mark>此概况的可能候选项包括心理学、语言、社会规则、伦理、真实关系与意义体系，看起来都不像知识竞赛，但背后都由同样的投入驱动。ADHD进一步干扰了外观：兴趣是真实的，燃料系统受损，而非兴趣本身。",
+  "myth2-truth": "高度伪装的表现，尤其是女性，常年乃至数十年未被识别。CAT-Q分数（128）将此概况置于自闭症女性范围，正是因为大量的补偿性努力。ADHD的多动症状对临床医生可见；其下的自闭特质被掩盖了。<mark style=\"background:var(--purple-light);color:var(--purple);font-weight:700;padding:1px 5px;border-radius:3px;\">这是晚期识别的常见路径，而非排除诊断的证据。</mark>",
+  "myth3-truth": "TAS-20分量表的分值差异在此至关重要。外向性思维得分偏低（14分，远低于约22的临界值），说明并非脱离情感生活。<mark style=\"background:var(--purple-light);color:var(--purple);font-weight:700;padding:1px 5px;border-radius:3px;\">困难在于识别和描述感受，而非不重视情感。</mark>你强烈认同情感觉察的重要性。这是内省性述情障碍：动机存在，信号质量降低。",
+  "myth4-truth": "应对策略和学业成绩在外部看起来都可以很强，但内部可能承担着隐性代价。<mark style=\"background:var(--purple-light);color:var(--purple);font-weight:700;padding:1px 5px;border-radius:3px;\">好成绩可以与寻求资源、自我倡导、社交导航、持续执行以及将潜力转化为实际成果等方面的显著隐性损伤并存。</mark>这种模式是高智力与强补偿掩盖了真实困难，而非低损伤。<mark style=\"background:var(--purple-light);color:var(--purple);font-weight:700;padding:1px 5px;border-radius:3px;\">正式评估的问题不是你是否在正常运转，而是识别这一概况是否能带来更好的支持、更深的自我理解以及更合适的治疗。</mark>",
+  "myth5-truth": "广泛性焦虑障碍和重度抑郁障碍是真实的，痛苦也是真实的。临床上仍待厘清的是发生顺序：焦虑和抑郁是作为独立状况出现，还是因长期应对未被识别的神经发育状况而累积？<mark style=\"background:var(--purple-light);color:var(--purple);font-weight:700;padding:1px 5px;border-radius:3px;\">这对治疗方向至关重要：针对原发性焦虑和抑郁的方法，与针对感觉过载、伪装疲惫和自闭症倦怠所引发的焦虑的方法，是不同的。</mark>",
+
+  // Callout body paragraphs
+  "co-social-p": "同时运行三套伪装策略（补偿、掩盖、同化）比依赖一套消耗更多认知资源。看似「还好」的社交场合实则极为耗力。社交活动后的恢复时间是真实且必要的。",
+  "co-interests-p": "ADHD产生新奇寻求；自闭特质产生对意义和模式的深度投入。结果是高强度投入、表面上的放弃与周期性回归交替出现。兴趣是真实的；燃料系统受损，而非兴趣本身。",
+  "co-emotions-p": "经常感受到强烈的情绪，但信号不能可靠地转化为可命名的情绪。天线朝内，动机强烈；但信号降级。这是内省性述情障碍，而非情感脱离。",
+  "co-sensory-p": "补偿策略（关门、隔音、管理接触）效果尚可，以至于感觉负担对他人不可见。代价在一天或一周内积累，形成显著的疲劳，却不被他人察觉。",
+  "co-body-p": "感觉概况（无法过滤外部输入）与内感受概况（无法过滤内部信号）在两个层面同时描述了同一底层模式。这是一个问题，而非两个独立问题。",
+  "co-cog-p": "在深度、模式识别和复杂分析方面表现卓越。当任务需要速度、常规处理或多步骤工作记忆时则低于平均水平。环境往往奖励速度而非深度，使这一不匹配格外显眼。",
+  "co-achiev-p": "「我成绩是不错，是的。但我从未觉得自己发挥了全部潜力——我有那么多项目和目标从未实现，因为我无法主动联系他人/资源，也无法专注于自己的优势而非努力弥补弱点。」学业成绩不能代表低损伤。隐性代价在于寻求资源、自我倡导、持续执行，以及将想法转化为完成项目的能力。",
+  "co-emo2-p": "悲伤相对容易察觉。愤怒和兴奋（均为高唤醒状态）在当下非常难以识别，通常只能事后通过对情境的逻辑分析才能理解。情绪处理是回顾性和分析性的，而非即时感受到的。复杂性是真实存在的：「我的情绪非常复杂，所以我不喜欢时刻思考它们、逐层剖析。」",
+
+  // Therapy body content
+  "th-card1-body": "<strong>情绪聚焦身体扫描</strong>：「感受情绪在身体的哪个部位」<br>\n          <span style=\"color:#4b5563;\">关注身体中的情绪会放大痛苦。<em>「越感受，越痛。」</em></span>",
+  "th-card2-body": "<strong>开放式冥想</strong>：「将呼吸带入感受」<br>\n          <span style=\"color:#4b5563;\">难以专注；情绪激活过于弥散和痛苦，难以静坐承受。</span>",
+  "th-card3-body": "<strong>渐进式肌肉放松（PMR）</strong>：绷紧后放松，从脚趾到头部<br>\n          <span style=\"color:#4b5563;\">无情绪色彩、结构化、循序渐进。睡前有效，是首选的自我调节工具。</span>",
+  "th-card4-body": "<strong>物理干预</strong>：止痛药、热敷<br>\n          <span style=\"color:#4b5563;\">直接的躯体干预，不涉及情绪处理。有效应对慢性肌肉紧张和过载后遗效应。</span>",
+
+  // Next steps table
+  "next-th-instrument": "评估工具",
+  "next-th-domain": "领域",
+  "next-th-priority": "优先级",
+  "next-row1-domain": "复杂性创伤后应激障碍",
+  "next-row2-domain": "倦怠 vs 重度抑郁",
+  "next-row3-domain": "关节过度活动（hEDS/HSD）",
+  "next-row4-domain": "抑郁 / 焦虑严重程度",
+  "pri-high": "高",
+  "pri-med": "中",
+  "next-q1": "<span class=\"q-num\">1.</span> 家人或老师注意到了哪些早期模式？感觉敏感、社交困惑、强烈兴趣、难以应对转变？",
+  "next-q2": "<span class=\"q-num\">2.</span> 社交活动后需要多少恢复时间？是否会在事后反复回放对话？",
+  "next-q3": "<span class=\"q-num\">3.</span> 日常规律被打乱时会发生什么？有哪些自我调节行为？",
+  "next-q4": "<span class=\"q-num\">4.</span> 焦虑和抑郁是独立出现的，还是在伪装负荷加重时出现的？",
+  "next-q5": "<span class=\"q-num\">5.</span> 会回避哪些环境？不可避免的感觉暴露后需要多少恢复时间？",
+
+};
+
+function switchLang(lang) {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (lang === 'zh' && zh[key]) {
+      if (!el.dataset.en) el.dataset.en = el.innerHTML;
+      el.innerHTML = zh[key];
+    } else if (lang === 'en' && el.dataset.en) {
+      el.innerHTML = el.dataset.en;
+    }
+  });
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-zh').classList.toggle('active', lang === 'zh');
+  localStorage.setItem('ndLang', lang);
+}
+// Restore saved language
+const _savedLang = localStorage.getItem('ndLang');
+if (_savedLang === 'zh') switchLang('zh');
+</script>
+
+</body>
+</html>

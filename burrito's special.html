@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title> 🌯 burrito's special: a preview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
+
+  :root {
+    color-scheme: light;
+    --paper: #fafaf8;
+    --ink: #1a1a1a;
+    --body: #2d2d2d;
+    --rule: #e8e5e0;
+    --soft-rule: #f0ede8;
+    --title: #8f4f3f;
+    --heading: #a65f46;
+    --subtle: #9a8178;
+    --gold: #ffda59;
+    --sage: #8f9f62;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: "Comfortaa", system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--ink);
+    background: var(--paper);
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e0ddd8;
+  }
+
+  header h1 {
+    font-family: Georgia, Cambria, Cochin, Times, "Times New Roman", serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    color: var(--title);
+    margin-bottom: 0.45rem;
+  }
+
+  header p {
+    font-size: 0.95rem;
+    color: var(--subtle);
+  }
+
+  section {
+    margin-bottom: 2.8rem;
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 700ms ease, transform 700ms ease;
+    scroll-margin-top: 2rem;
+  }
+
+  section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  h2,
+  h3 {
+    font-family: Georgia, Cambria, Cochin, Times, "Times New Roman", serif;
+    font-weight: 600;
+    text-transform: none;
+  }
+
+  h2 {
+    font-size: 1.35rem;
+    letter-spacing: 0.01em;
+    color: var(--heading);
+    margin-bottom: 1rem;
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    color: #7d5b4f;
+    margin: 1.2rem 0 0.6rem;
+  }
+
+  p {
+    color: var(--body);
+    margin-bottom: 0.9rem;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 0.9rem;
+  }
+
+  ul li {
+    padding: 0.45rem 0 0.45rem 1.1rem;
+    position: relative;
+    color: var(--body);
+    border-bottom: 1px solid var(--soft-rule);
+  }
+
+  ul li:last-child {
+    border-bottom: none;
+  }
+
+  ul li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.95rem;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #bbb;
+  }
+
+  ul li strong {
+    color: #111;
+    font-weight: 600;
+  }
+
+  blockquote {
+    margin: 1.2rem 0;
+    padding: 0.9rem 1.2rem;
+    background: #f4f2ee;
+    border-left: 3px solid #d0ccc5;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.93rem;
+    color: #444;
+    font-style: italic;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 2.8rem 0;
+  }
+
+  .scroll-brush {
+    --brush-progress: 0%;
+    background-image: linear-gradient(
+      90deg,
+      rgba(255, 218, 89, 0.78) var(--brush-progress),
+      transparent var(--brush-progress)
+    );
+    background-repeat: no-repeat;
+    background-size: 100% 55%;
+    background-position: 0 82%;
+    padding: 0.02em 0.12em;
+    border-radius: 0.18em;
+  }
+
+  #progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--gold), var(--sage));
+    z-index: 1000;
+    transition: width 120ms linear;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    section {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+
+    #progress {
+      transition: none;
+    }
+
+    .scroll-brush {
+      --brush-progress: 100%;
+    }
+  }
+</style>
+</head>
+<body><div aria-hidden="true" id="progress"></div>
+<div class="container">
+<header>
+<h1>burrito's special: a preview</h1>
+</header>
+<section id="section-1">
+<h2>The special interest</h2>
+<p>The central question is whether Rachel's lifelong interest in people, power, and society qualifies as a special interest in the autistic sense. The interest centers on the mechanics underneath: power dynamics, hierarchy, class, institutional harm, moral responsibility, identity, and how social systems reproduce or suppress. She describes it as something she can't unsee: She describes it as something she can't unsee:
+"you cannot unsee class struggles, power dynamics, and socioeconomic stratification, it is everywhere."</p>
+<ul>
+<li><strong>Mechanism over memorization.</strong> She wants to understand how systems work and why they fail rather than accumulate facts.</li>
+<li><strong>Automatic and background.</strong> The analysis starts on its own.
+      <li><strong>Broad topics, narrow route.</strong> The surface subjects vary but the recurring lens is consistent: who has power, who is harmed, what structure makes this possible, whether it is right or wrong.</li>
+<li><strong>Early and persistent.</strong> She was consuming college-level sociology, economics, and psychology content around age 10, and has long preferred nonfiction, social documentary, and media essays on social implication and symbolism.</li>
+</li></ul>
+</section>
+<hr class="divider"/>
+<section id="section-2">
+<h2>Misconceptions Rachel had about special interests</h2>
+<p>Rachel did not initially believe she had a special interest, and was at one point dismissed by a doctor on those grounds. Several misconceptions shaped that conclusion.</p>
+<ul>
+<li><strong>SI requires expertise.</strong> She assumed a special interest meant being an encyclopedic expert in a narrow domain. Because she doesn't memorize facts or figures, she ruled herself out. History buffs memorize dates; she thinks in mechanisms. She didn't see how that could count.</li>
+<li><strong>SI requires something unusual.</strong> Her interest in people, society, and power felt too broad and too socially legible to qualify. It seemed like something many people cared about, not a distinguishing autistic trait.</li>
+<li><strong>That ADHD invalidates SI.</strong> Because her interests come in bursts and lose fuel after a few weeks, she didn't feel they were sustained enough to be genuine. She described a "graveyard of interested subject matters" and concluded nothing stuck long enough to be significant.</li>
+<li><strong>That she didn't deserve to belong.</strong> She noted explicitly: "I never really thought I deserved to belong." The bar she held herself to was the most stereotypical autistic presentation, and she didn't meet it.</li>
+</ul>
+<p><strong>The clinical note in her assessment addresses this directly: "no special interest" is not a valid basis for dismissal</strong> </p>
+<p> DSM-5 requires at least two of four RRB criteria, and the term is widely misunderstood as requiring encyclopedic expertise. The actual criterion is high-intensity engagement that returns repeatedly and serves a regulatory or meaning-making function. It has little to do with how "special" the interest is, but more to do with how she is navigating through the interest, and how she approach social interactions in relation to this interest.</p>
+</section>
+<hr class="divider"/>
+<section id="section-3">
+<h2>AuDHD nuance</h2>
+<p>She's operating under an AuDHD working hypothesis. ADHD hyperfixations tend to be bursty and scattered, which means the depth of engagement fluctuates. The synthesis draws a useful distinction: the subtopics may rotate (fandoms, COVID, games, politics) while the deeper attractor (power, society, harm) remains constant.</p>
+</section>
+<hr class="divider"/>
+<section id="section-4">
+<h2>Special interest as coping mechanism</h2>
+<p>The interest serves a regulatory function alongside its intellectual one. Research on monotropism describes autistic special interests as something people literally need during stress and life transitions to stay functional. Rachel's notes show this pattern clearly.</p>
+<ul>
+<li><strong>Stress activation.</strong> The interest intensifies during periods of uncertainty: COVID, moving, new jobs. Rather than going dormant under pressure, it becomes more consuming and more pronounced in a way that her understanding of the macro structure and inequality can drive her spiraling and actions (e.g. not wanting to work because of CAPTITALISM RANT).</li>
+<li><strong>Autistic inertia example.</strong> During a day spent in the autism rabbit hole, she notes being stuck in bed from noon to 7pm, unable to stop. The engagement had its own momentum. And she does not feel like this is something she can't get out of. Rather, she enjoys spending time doing this. But her head really hurt and she needs to stop now.</li>
+<li><strong>Displaced emotion routing.</strong> She also acknowledges a darker edge: some of her most intense political and structural analysis in personal relationships was probably displaced emotion about intimacy and feeling unseen, routed through the only vocabulary available to her. The interest provided a legible frame for feelings she couldn't name directly, consistent with her alexithymia profile.</li>
+</ul>
+</section>
+<section id="section-5">
+<h2>Observation: </h2>
+<h3>Identity and moral charge</h3>
+<p>The moral dimension: The interest in power, harm, and social structure is an organizing principle, not a detached intellectual position. </p>
+<p>The interest is identity-bound. Injustice feels personal. She cares a lot about other people often from the lense of "this is not fair/right/kind." She has 精神洁癖 and is very hung up on the fact that no one is perfect and get very upset when she doest get to be exactly who she believes the most morally correct that she can be. </p>
+<p> Likewise, she has trouble comprehending that people care about other things more than abstraction. She describes feeling personally offended when someone she considers smart and caring shows indifference to structural inequality. Other people's indifference can feel like a wound because it implies a failure of shared moral reality, and failure on her part to 支教, though she is now more depressed so she just kinda gave up on that.</p>
+<p>This drove real friction, particularly with her family and friends she deemed "regressive" or "willingfully ignorant". Her family and teachers labeled her too argumentative, too cynical, too radical, and unable to just be without framing everything through something larger. Rachel acknowledges that some of those political arguments at home were probably displaced emotions about intimacy and feeling unseen, routed through the only vocabulary she had.</p>
+</h3></section>
+<section id="section-6">
+<h2>bruh this is not doing rps</h2>
+<p>During lockdown in spring 2020, she went deep into a boy band shipping fandom. Most people in the community were there for shipping, fanfiction, gossip, and parasocial attachment. Rachel, being the closeted aroace she is, ended up euthusiastically doing an "amateur digital forensic analysis" of the media timeline and writing four investigative journalism style pieces framing the whole thing as a case study in how the entertainment industry systematically suppresses LGBT artists. Nobody asked for it and it diverged completely from how most fans were engaging with the same thing.</p>
+</section>
+<hr class="divider"/>
+<section id="section-7">
+<h2>COVID has brought the crazy out of me</h2>
+<p>During COVID she was materially fine: comfortable campus, remote neighborhood, no sick family members. She was still deeply depressed and angry, consuming structural harm through news and others' stories. She couldn't find comfort in the good being done because the institutional failures were too present. She eventually stopped reading news entirely.  the lens through social dynamic turned a personal non-event into a moral and systemic crisis she could not look away from. </p>
+<p> Of course the whole world was going through a very traumatic time too but GIRL CHILL.</p>
+</section>
+<hr class="divider"/>
+<section id="section-8">
+<h2>文明六的原罪</h2>
+<p> Most players, including her partner who knows the game very well, take the political language in Civ VI as strategic naming and move on. Rachel was genuinely upset by the fact that the game borrows real concepts (communism, workers, age) while reducing people, labor, and ideology to resource tokens. </p>
+<p>She holds an internal model of how social structures actually work and what makes a good society, and the game's selective borrowing felt like a distortion of that model, borderling appropriation misrepresentation. Also she does like the fact that it is not realistically coherent It manifested not as anger exactly, but as a disorienting friction she couldn't set aside, even though she enjoys the game very much as an adhd person. <strong>甜蜜的烦恼！</strong></p>
+</section>
+<hr class="divider"/>
+<section id="section-9">
+<h2>MetaMasking: girl你负负得正了</h2>
+<p>She has learned to hold back. Calling out the social structure or power dynamics in meetings or casual settings makes people tense and can derail practical tasks.  </p>
+<p>Ironically, it is precisely her understanding through her special interest that help her understand that this is not the place and time to share her observation. 哈哈哈哈哈哈哈哈哈哈嗝我要无语了。</p>
+</section>
+<h2> 就这样吧我要睡觉了！！！！！！！！！</h2>
+
+</div>
+
+<script>
+  (() => {
+    const progress = document.getElementById("progress");
+    const sections = Array.from(document.querySelectorAll("section"));
+    const brushTexts = Array.from(document.querySelectorAll(".scroll-brush"));
+
+    function updateProgress() {
+      const page = document.documentElement;
+      const scrollable = page.scrollHeight - page.clientHeight;
+      const percent = scrollable > 0 ? (page.scrollTop / scrollable) * 100 : 0;
+      progress.style.width = `${percent}%`;
+    }
+
+    function updateBrushHighlights() {
+      brushTexts.forEach(text => {
+        const rect = text.getBoundingClientRect();
+        const start = window.innerHeight * 0.82;
+        const end = window.innerHeight * 0.42;
+        const progressValue = (start - rect.top) / (start - end);
+        const clamped = Math.min(Math.max(progressValue, 0), 1);
+        text.style.setProperty("--brush-progress", `${clamped * 100}%`);
+      });
+    }
+
+    function updateSectionsReveal() {
+      sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.88) {
+          section.classList.add("visible");
+        }
+      });
+    }
+
+    function syncPageState() {
+      updateProgress();
+      updateBrushHighlights();
+      updateSectionsReveal();
+    }
+
+    window.addEventListener("scroll", syncPageState, { passive: true });
+    window.addEventListener("resize", syncPageState);
+    window.addEventListener("load", syncPageState);
+    syncPageState();
+  })();
+</script></body>
+</html>

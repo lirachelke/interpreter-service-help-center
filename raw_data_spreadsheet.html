@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raw Assessment Data</title>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --card: #ffffff;
+    --border: #e2ddd8;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --sage: #4a7b6e;
+    --coral: #e05c4b;
+    --purple: #6e5fa0;
+    --amber: #d97706;
+    --teal: #0891b2;
+    --tab-h: 44px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Georgia', serif; background: var(--bg); color: var(--text); font-size: 13px; }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #2d5a4f 0%, #4a3d7a 100%);
+    color: #fff; padding: 20px 28px 0; user-select: none;
+  }
+  .header h1 { font-size: 1.15rem; font-weight: normal; letter-spacing: .03em; margin-bottom: 4px; }
+  .header p  { font-family: sans-serif; font-size: .75rem; opacity: .7; margin-bottom: 14px; }
+
+  /* ── Tab bar ── */
+  .tabs { display: flex; gap: 2px; overflow-x: auto; }
+  .tab {
+    height: var(--tab-h); padding: 0 18px;
+    border: none; border-radius: 6px 6px 0 0;
+    font-family: sans-serif; font-size: .75rem; font-weight: 600;
+    cursor: pointer; white-space: nowrap; transition: background .15s;
+    background: rgba(255,255,255,.15); color: rgba(255,255,255,.75);
+    letter-spacing: .04em; text-transform: uppercase;
+  }
+  .tab:hover  { background: rgba(255,255,255,.25); color: #fff; }
+  .tab.active { background: var(--bg); color: var(--text); }
+
+  /* ── Panels ── */
+  .panels { padding: 20px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .panel-abbr {
+    font-family: sans-serif; font-size: .72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 3px;
+  }
+  .panel-title {
+    font-family: sans-serif; font-size: 1.05rem; font-weight: 700;
+    margin-bottom: 4px; color: var(--text);
+  }
+  .panel-meta {
+    font-family: sans-serif; font-size: .75rem; color: var(--muted); margin-bottom: 16px; line-height: 1.5;
+  }
+
+  /* ── Summary cards ── */
+  .summary-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  .score-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 16px; min-width: 120px;
+  }
+  .score-card .label { font-family: sans-serif; font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .score-card .val   { font-size: 1.5rem; font-weight: 700; margin-top: 2px; }
+  .score-card .sub   { font-family: sans-serif; font-size: .7rem; color: var(--muted); }
+  .c-coral   { color: var(--coral); }
+  .c-purple  { color: var(--purple); }
+  .c-sage    { color: var(--sage); }
+  .c-amber   { color: var(--amber); }
+  .c-teal    { color: var(--teal); }
+
+  /* ── Grid tables ── */
+  .table-wrap { overflow-x: auto; background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 20px; }
+  table { border-collapse: collapse; width: 100%; }
+  thead th {
+    background: #f0ede8; font-family: sans-serif; font-size: .68rem;
+    text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+    padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+  }
+  thead th.num { text-align: center; }
+  tbody tr:nth-child(even) { background: #faf9f7; }
+  tbody tr:hover { background: #f0f7f5; }
+  td { padding: 7px 12px; border-bottom: 1px solid #f0ede8; vertical-align: top; line-height: 1.45; }
+  td.item-num { font-family: sans-serif; font-size: .75rem; color: var(--muted); text-align: center; font-weight: 600; width: 36px; }
+  td.response { font-family: sans-serif; font-size: .78rem; font-weight: 700; white-space: nowrap; }
+  td.score-val { font-family: sans-serif; font-size: .82rem; font-weight: 700; text-align: center; }
+  td.subscale-tag {
+    font-family: sans-serif; font-size: .67rem; text-transform: uppercase;
+    letter-spacing: .05em; white-space: nowrap;
+  }
+  .tag { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: .65rem; font-weight: 700; }
+  .tag-coral  { background: #fdecea; color: var(--coral); }
+  .tag-purple { background: #eeeaf7; color: var(--purple); }
+  .tag-sage   { background: #e8f2ef; color: var(--sage); }
+  .tag-amber  { background: #fef3c7; color: var(--amber); }
+  .tag-teal   { background: #e0f2fe; color: var(--teal); }
+  .tag-gray   { background: #f3f4f6; color: #6b7280; }
+
+  /* scoring rows */
+  .scoring-row { background: #faf9f7; border-top: 2px solid var(--border); }
+  .scoring-row td { font-family: sans-serif; font-size: .75rem; font-weight: 700; padding: 10px 12px; }
+
+  /* section headers within table */
+  .section-header td {
+    background: #f0ede8; font-family: sans-serif; font-size: .68rem;
+    text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
+    font-weight: 700; padding: 6px 12px;
+  }
+
+  /* calculation box */
+  .calc-box {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 20px; margin-bottom: 20px; font-family: sans-serif; font-size: .8rem;
+  }
+  .calc-box h4 { font-size: .8rem; margin-bottom: 10px; color: var(--text); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .calc-box table { background: transparent; }
+  .calc-box table td { border: none; padding: 3px 16px 3px 0; font-size: .78rem; }
+  .calc-box table td:first-child { color: var(--muted); min-width: 180px; }
+  .calc-box table td:last-child { font-weight: 700; }
+  .calc-note { margin-top: 10px; color: var(--muted); font-size: .72rem; line-height: 1.5; }
+
+  /* scroll hint */
+  .scroll-hint { font-family: sans-serif; font-size: .7rem; color: var(--muted); margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="../Obsidian/Boston State of Mind/neurodevelopmental_dashboard.html"
+     style="display:inline-block;margin-bottom:10px;font-family:sans-serif;font-size:.72rem;font-weight:600;
+            color:rgba(255,255,255,.75);text-decoration:none;border:1px solid rgba(255,255,255,.35);
+            padding:3px 12px;border-radius:20px;letter-spacing:.04em;"
+     onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,.7)'"
+     onmouseout="this.style.color='rgba(255,255,255,.75)';this.style.borderColor='rgba(255,255,255,.35)'">
+    ← Back to dashboard
+  </a>
+  <h1>Neurodevelopmental Self-Assessment: Raw Data</h1>
+  <p>Item-by-item responses · All instruments · 2026-05-23 · Self-report only, not a clinical diagnosis</p>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-panel="aq">AQ-50</button>
+    <button class="tab" data-panel="raads">RAADS-R</button>
+    <button class="tab" data-panel="catq">CAT-Q</button>
+    <button class="tab" data-panel="asrs">ASRS v1.1</button>
+    <button class="tab" data-panel="tas">TAS-20</button>
+    <button class="tab" data-panel="aasp">AASP</button>
+    <button class="tab" data-panel="maia">MAIA-2</button>
+  </div>
+</div>
+
+<div class="panels">
+
+<!-- ═══════════ AQ-50 ═══════════ -->
+<div class="panel active" id="panel-aq">
+  <div class="panel-abbr">AQ-50</div>
+  <div class="panel-title">Autism Spectrum Quotient</div>
+  <div class="panel-meta">Baron-Cohen et al. · Embrace Autism · 50 items · Scale: Definitely Agree / Slightly Agree / Slightly Disagree / Definitely Disagree · Scored 0 or 1 · Threshold ≥26</div>
+  <div class="summary-row">
+    <div class="score-card"><div class="label">Total Score</div><div class="val c-coral">35</div><div class="sub">/ 50 · threshold ≥26</div></div>
+    <div class="score-card"><div class="label">Social Skills</div><div class="val c-coral">9</div><div class="sub">/ 10</div></div>
+    <div class="score-card"><div class="label">Attention Switching</div><div class="val c-coral">8</div><div class="sub">/ 10</div></div>
+    <div class="score-card"><div class="label">Attention to Detail</div><div class="val c-amber">6</div><div class="sub">/ 10</div></div>
+    <div class="score-card"><div class="label">Communication</div><div class="val c-coral">7</div><div class="sub">/ 10</div></div>
+    <div class="score-card"><div class="label">Imagination</div><div class="val c-amber">5</div><div class="sub">/ 10</div></div>
+  </div>
+  <div class="calc-box">
+    <h4>Scoring Key</h4>
+    <p class="calc-note">Each item scores 1 point if the "autistic direction" response is chosen. Definitely Agree or Slightly Agree = 1 point for positively-worded items; Definitely Disagree or Slightly Disagree = 1 point for negatively-worded items. Items marked † below are negatively-worded (agree = 0 points).</p>
+  </div>
+  <div class="scroll-hint">← scroll horizontally if needed</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th class="num">#</th>
+        <th>Statement</th>
+        <th>Response</th>
+        <th class="num">Score</th>
+        <th>Subscale</th>
+      </tr></thead>
+      <tbody id="aq-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════ RAADS-R ═══════════ -->
+<div class="panel" id="panel-raads">
+  <div class="panel-abbr">RAADS-R</div>
+  <div class="panel-title">Ritvo Autism Asperger Diagnostic Scale, Revised</div>
+  <div class="panel-meta">Ritvo et al. · Embrace Autism · 80 items · Scale: True now and when young (3) / True only now (2) / True only when young &lt;16 (1) / Never true (0) · Threshold ≥65</div>
+  <div class="summary-row">
+    <div class="score-card"><div class="label">Total Score</div><div class="val c-coral">155</div><div class="sub">/ 240 · threshold ≥65</div></div>
+    <div class="score-card"><div class="label">Social Relatedness</div><div class="val c-coral">79</div><div class="sub">/ 117</div></div>
+    <div class="score-card"><div class="label">Sensory / Motor</div><div class="val c-coral">46</div><div class="sub">/ 66</div></div>
+    <div class="score-card"><div class="label">Circumscribed Interests</div><div class="val c-amber">18</div><div class="sub">/ 33</div></div>
+    <div class="score-card"><div class="label">Language</div><div class="val c-amber">12</div><div class="sub">/ 24</div></div>
+  </div>
+  <div class="scroll-hint">← scroll horizontally if needed</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th class="num">#</th>
+        <th>Statement</th>
+        <th>Response</th>
+        <th class="num">Score</th>
+        <th>Subscale</th>
+      </tr></thead>
+      <tbody id="raads-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════ CAT-Q ═══════════ -->
+<div class="panel" id="panel-catq">
+  <div class="panel-abbr">CAT-Q</div>
+  <div class="panel-title">Camouflaging Autistic Traits Questionnaire</div>
+  <div class="panel-meta">Hull et al. · Embrace Autism · 25 items · Scale: Strongly Disagree (1) → Strongly Agree (7) · Autistic women avg ~124</div>
+  <div class="summary-row">
+    <div class="score-card"><div class="label">Total Score</div><div class="val c-coral">128</div><div class="sub">autistic women avg ~124</div></div>
+    <div class="score-card"><div class="label">Compensation</div><div class="val c-coral">45</div><div class="sub">/ 63 · NT avg 33 · Autistic avg 41</div></div>
+    <div class="score-card"><div class="label">Masking</div><div class="val c-amber">39</div><div class="sub">/ 63 · NT avg 33 · Autistic avg 41</div></div>
+    <div class="score-card"><div class="label">Assimilation</div><div class="val c-coral">44</div><div class="sub">/ 63 · NT avg 34 · Autistic avg 42</div></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th class="num">#</th>
+        <th>Statement</th>
+        <th>Response</th>
+        <th class="num">Score</th>
+        <th>Subscale</th>
+      </tr></thead>
+      <tbody id="catq-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════ ASRS ═══════════ -->
+<div class="panel" id="panel-asrs">
+  <div class="panel-abbr">ASRS v1.1</div>
+  <div class="panel-title">Adult ADHD Self-Report Scale</div>
+  <div class="panel-meta">WHO / Harvard Medical School · Psychology Tools · 18 items · Scale: Never / Rarely / Sometimes / Often / Very Often · Part A (6 items) screener: ≥4 "Often/Very Often" = positive screen</div>
+  <div class="summary-row">
+    <div class="score-card"><div class="label">Part A Screen</div><div class="val c-coral">6 / 6</div><div class="sub">Ceiling · Confirmed diagnosis</div></div>
+    <div class="score-card"><div class="label">Part B Elevated</div><div class="val c-coral">10 / 12</div><div class="sub">items at Often or Very Often</div></div>
+  </div>
+  <div class="calc-box">
+    <h4>Scoring Note</h4>
+    <p class="calc-note">Part A: items 1–6. Shaded cells in original instrument indicate clinical significance. Items 1–3 = significant if Often or Very Often. Items 4–6 = significant if Sometimes, Often, or Very Often. All 6 Part A items scored in the clinically significant range. Part B (items 7–18) maps symptom severity but does not affect the screener result.</p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th class="num">#</th>
+        <th>Question</th>
+        <th>Response</th>
+        <th>Part</th>
+        <th>Domain</th>
+      </tr></thead>
+      <tbody id="asrs-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════ TAS-20 ═══════════ -->
+<div class="panel" id="panel-tas">
+  <div class="panel-abbr">TAS-20</div>
+  <div class="panel-title">Toronto Alexithymia Scale</div>
+  <div class="panel-meta">Taylor et al. · Embrace Autism · 20 items · Scale: Strongly Disagree (1) → Strongly Agree (5) · Possible alexithymia ≥52 · Definite ≥61</div>
+  <div class="summary-row">
+    <div class="score-card"><div class="label">Total Score</div><div class="val c-amber">59</div><div class="sub">Possible alexithymia · threshold ≥52</div></div>
+    <div class="score-card"><div class="label">DIF (Difficulty Identifying)</div><div class="val c-coral">23</div><div class="sub">/ 35 · threshold ~17</div></div>
+    <div class="score-card"><div class="label">DDF (Difficulty Describing)</div><div class="val c-coral">22</div><div class="sub">/ 35 · threshold ~15</div></div>
+    <div class="score-card"><div class="label">EOT (Externally Oriented)</div><div class="val c-sage">14</div><div class="sub">/ 30 · threshold ~22 · LOW = good</div></div>
+  </div>
+  <div class="calc-box">
+    <h4>Scoring Key</h4>
+    <p class="calc-note">Items 4, 5, 10, 18, 19 are reverse-scored (Strongly Agree = 1, Strongly Disagree = 5). DIF = items 1, 3, 6, 7, 9, 13, 14. DDF = items 2, 4, 11, 12, 17. EOT = items 5, 8, 10, 15, 16, 18, 19, 20.</p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th class="num">#</th>
+        <th>Statement</th>
+        <th>Response</th>
+        <th class="num">Raw</th>
+        <th class="num">Scored</th>
+        <th>Subscale</th>
+      </tr></thead>
+      <tbody id="tas-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════ AASP ═══════════ -->
+<div class="panel" id="panel-aasp">
+  <div class="panel-abbr">AASP</div>
+  <div class="panel-title">Adult/Adolescent Sensory Profile</div>
+  <div class="panel-meta">Brown &amp; Dunn · 60 items (1 missing) · Scale: Almost Never (1) → Almost Always (5) · Scored by quadrant</div>
+  <div class="summary-row">
+    <div class="score-card"><div class="label">Sensation Avoiding</div><div class="val c-coral">+4.42 SD</div><div class="sub">Much More Than Most</div></div>
+    <div class="score-card"><div class="label">Sensory Sensitivity</div><div class="val c-coral">+3.01 SD</div><div class="sub">Much More Than Most</div></div>
+    <div class="score-card"><div class="label">Low Registration</div><div class="val c-amber">+1.84 SD</div><div class="sub">More Than Most</div></div>
+    <div class="score-card"><div class="label">Sensation Seeking</div><div class="val c-sage">+1.11 SD</div><div class="sub">More Than Most</div></div>
+  </div>
+  <div class="calc-box">
+    <h4>Quadrant Scoring</h4>
+    <table><tbody>
+      <tr><td>Low Registration (items mapping to low threshold/passive)</td><td class="c-amber">Raw sum → SD vs norms</td></tr>
+      <tr><td>Sensation Seeking (low threshold/active)</td><td class="c-sage">Raw sum → SD vs norms</td></tr>
+      <tr><td>Sensory Sensitivity (high threshold/passive)</td><td class="c-coral">Raw sum → SD vs norms</td></tr>
+      <tr><td>Sensation Avoiding (high threshold/active)</td><td class="c-coral">Raw sum → SD vs norms</td></tr>
+    </tbody></table>
+    <p class="calc-note">Item 54 (Auditory: "I am distracted if there is a lot of noise around") was not answered and is excluded from totals.</p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th class="num">#</th>
+        <th>Statement</th>
+        <th>Modality</th>
+        <th>Response</th>
+        <th class="num">Score</th>
+        <th>Quadrant</th>
+      </tr></thead>
+      <tbody id="aasp-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════ MAIA-2 ═══════════ -->
+<div class="panel" id="panel-maia">
+  <div class="panel-abbr">MAIA-2</div>
+  <div class="panel-title">Multidimensional Assessment of Interoceptive Awareness v2</div>
+  <div class="panel-meta">Mehling et al. · NovoPsych · 37 items · Scale: Never (0) → Always (5) · Items 5–15 reverse-scored for subscales</div>
+  <div class="summary-row">
+    <div class="score-card"><div class="label">Noticing</div><div class="val c-amber">2.25</div><div class="sub">12th percentile</div></div>
+    <div class="score-card"><div class="label">Not-Distracting</div><div class="val c-coral">0.83</div><div class="sub">6th percentile</div></div>
+    <div class="score-card"><div class="label">Not-Worrying</div><div class="val c-coral">1.20</div><div class="sub">6th percentile</div></div>
+    <div class="score-card"><div class="label">Attention Regulation</div><div class="val c-amber">2.29</div><div class="sub">26th percentile</div></div>
+    <div class="score-card"><div class="label">Emotional Awareness</div><div class="val c-amber">2.40</div><div class="sub">14th percentile</div></div>
+    <div class="score-card"><div class="label">Self-Regulation</div><div class="val c-amber">2.25</div><div class="sub">32nd percentile</div></div>
+    <div class="score-card"><div class="label">Body Listening</div><div class="val c-sage">3.67</div><div class="sub">90th percentile</div></div>
+    <div class="score-card"><div class="label">Trust</div><div class="val c-amber">2.33</div><div class="sub">17th percentile</div></div>
+  </div>
+  <div class="calc-box">
+    <h4>Scoring</h4>
+    <p class="calc-note">Subscale score = mean of items. Items 5–10 (Not-Distracting) and 11–12, 15 (Not-Worrying) are reverse-scored in the subscale average. Highlighted cells in the original report indicate the selected response.</p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th class="num">#</th>
+        <th>Statement</th>
+        <th>Response (0–5)</th>
+        <th class="num">Score</th>
+        <th>Subscale</th>
+      </tr></thead>
+      <tbody id="maia-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /panels -->
+
+<script>
+// ── Tab switching ──
+document.getElementById('tabs').addEventListener('click', e => {
+  if (!e.target.classList.contains('tab')) return;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById('panel-' + e.target.dataset.panel).classList.add('active');
+});
+
+// ── Helpers ──
+function tag(label, color) {
+  return `<span class="tag tag-${color}">${label}</span>`;
+}
+
+function buildTable(tbodyId, rows) {
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = rows.map(r => r).join('');
+}
+
+// ─────────────────────────────────────────────
+// AQ-50
+// scoring direction: 1 = autistic direction
+// a=Definitely Agree, b=Slightly Agree, c=Slightly Disagree, d=Definitely Disagree
+// Items where AGREE = autistic: 2,4,5,6,7,9,12,13,16,18,19,20,23,28 (etc per key)
+// Reverse items (disagree = autistic): 1,3,8,10,11,14,15,17,21,22,24,25,26,27,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50
+// Standard AQ scoring key (1=scored in autistic direction):
+const AQ_DATA = [
+  [1,"I prefer to do things with others rather than on my own.","Definitely Disagree",1,0,"Social Skills"],
+  [2,"I prefer to do things the same way over and over again.","Definitely Agree",1,1,"Attention Switching"],
+  [3,"If I try to imagine something, I find it very easy to create a picture in my mind.","Definitely Disagree",1,0,"Imagination"],
+  [4,"I frequently get so strongly absorbed in one thing that I lose sight of other things.","Definitely Agree",1,1,"Attention Switching"],
+  [5,"I often notice small sounds when others do not.","Definitely Agree",1,1,"Attention to Detail"],
+  [6,"I usually notice car number plates or similar strings of information.","Slightly Agree",1,1,"Attention to Detail"],
+  [7,"Other people frequently tell me that what I've said is impolite, even though I think it is polite.","Slightly Agree",1,1,"Social Skills"],
+  [8,"When I'm reading a story, I can easily imagine what the characters might look like.","Definitely Disagree",1,0,"Imagination"],
+  [9,"I am fascinated by dates.","Slightly Disagree",1,0,"Attention to Detail"],
+  [10,"In a social group, I can easily keep track of several different people's conversations.","Definitely Disagree",1,1,"Social Skills"],
+  [11,"I find social situations easy.","Definitely Disagree",1,1,"Social Skills"],
+  [12,"I tend to notice details that others do not.","Slightly Agree",1,1,"Attention to Detail"],
+  [13,"I would rather go to a library than a party.","Definitely Agree",1,1,"Social Skills"],
+  [14,"I find making up stories easy.","Slightly Disagree",1,0,"Imagination"],
+  [15,"I find myself drawn more strongly to people than to things.","Slightly Agree",1,0,"Social Skills"],
+  [16,"I tend to have very strong interests which I get upset about if I can't pursue.","Slightly Agree",1,1,"Attention Switching"],
+  [17,"I enjoy social chit-chat.","Definitely Disagree",1,1,"Communication"],
+  [18,"When I talk, it isn't always easy for others to get a word in edgeways.","Slightly Agree",1,1,"Communication"],
+  [19,"I am fascinated by numbers.","Definitely Disagree",1,0,"Attention to Detail"],
+  [20,"When I'm reading a story, I find it difficult to work out the characters' intentions.","Definitely Disagree",1,0,"Imagination"],
+  [21,"I don't particularly enjoy reading fiction.","Slightly Disagree",1,0,"Imagination"],
+  [22,"I find it hard to make new friends.","Definitely Agree",1,1,"Social Skills"],
+  [23,"I notice patterns in things all the time.","Slightly Agree",1,1,"Attention to Detail"],
+  [24,"I would rather go to the theatre than a museum.","Slightly Disagree",1,0,"Imagination"],
+  [25,"It does not upset me if my daily routine is disturbed.","Slightly Disagree",1,1,"Attention Switching"],
+  [26,"I frequently find that I don't know how to keep a conversation going.","Definitely Disagree",1,0,"Communication"],
+  [27,"I find it easy to 'read between the lines' when someone is talking to me.","Slightly Disagree",1,1,"Communication"],
+  [28,"I usually concentrate more on the whole picture, rather than the small details.","Slightly Disagree",1,1,"Attention to Detail"],
+  [29,"I am not very good at remembering phone numbers.","Definitely Agree",1,1,"Attention to Detail"],
+  [30,"I don't usually notice small changes in a situation, or a person's appearance.","Definitely Disagree",1,0,"Attention to Detail"],
+  [31,"I know how to tell if someone listening to me is getting bored.","Definitely Agree",1,0,"Communication"],
+  [32,"I find it easy to do more than one thing at once.","Definitely Agree",1,0,"Attention Switching"],
+  [33,"When I talk on the phone, I'm not sure when it's my turn to speak.","Definitely Agree",1,1,"Communication"],
+  [34,"I enjoy doing things spontaneously.","Slightly Disagree",1,1,"Attention Switching"],
+  [35,"I am often the last to understand the point of a joke.","Definitely Disagree",1,0,"Communication"],
+  [36,"I find it easy to work out what someone is thinking or feeling just by looking at their face.","Slightly Disagree",1,1,"Social Skills"],
+  [37,"If there is an interruption, I can switch back to what I was doing very quickly.","Slightly Disagree",1,1,"Attention Switching"],
+  [38,"I am good at social chit-chat.","Definitely Disagree",1,1,"Communication"],
+  [39,"People often tell me that I keep going on and on about the same thing.","Slightly Agree",1,1,"Communication"],
+  [40,"When I was young, I used to enjoy playing games involving pretending with other children.","Slightly Disagree",1,0,"Imagination"],
+  [41,"I like to collect information about categories of things.","Slightly Agree",1,1,"Attention to Detail"],
+  [42,"I find it difficult to imagine what it would be like to be someone else.","Definitely Agree",1,1,"Social Skills"],
+  [43,"I like to plan any activities I participate in carefully.","Definitely Agree",1,1,"Attention Switching"],
+  [44,"I enjoy social occasions.","Slightly Disagree",1,1,"Social Skills"],
+  [45,"I find it difficult to work out people's intentions.","Definitely Disagree",1,0,"Social Skills"],
+  [46,"New situations make me anxious.","Definitely Agree",1,1,"Attention Switching"],
+  [47,"I enjoy meeting new people.","Slightly Agree",1,0,"Social Skills"],
+  [48,"I am a good diplomat.","Definitely Agree",1,0,"Communication"],
+  [49,"I am not very good at remembering people's date of birth.","Definitely Agree",1,1,"Attention to Detail"],
+  [50,"I find it very easy to play games with children that involve pretending.","Definitely Agree",1,0,"Imagination"],
+];
+
+// Recalculate AQ scores per standard key
+const AQ_AGREE_SCORED = new Set([2,4,5,6,7,9,12,13,16,18,19,20,23,28,29,41,42,43,44,46,49]);
+const AQ_DISAGREE_SCORED = new Set([1,3,8,10,11,14,15,17,21,22,24,25,26,27,30,31,32,33,34,35,36,37,38,39,40,45,47,48,50]);
+// Note: Items are scored based on published AQ key; some items above may differ
+// Using exact scored items from Baron-Cohen et al. 2001:
+// Scored in autistic direction (score 1 if): 
+// Definitely/Slightly Agree: 2,4,5,6,7,9,12,13,16,18,19,20,23,28,29,41,42,43,46,49
+// Definitely/Slightly Disagree: 1,3,8,10,11,14,15,17,21,22,24,25,26,27,30,31,32,33,34,35,36,37,38,39,40,45,47,48,50
+
+const AQ_SUBSCALES = {
+  "Social Skills": "coral",
+  "Attention Switching": "purple",
+  "Attention to Detail": "teal",
+  "Communication": "amber",
+  "Imagination": "sage"
+};
+
+function aqScore(item, response) {
+  const agree = response.includes("Agree");
+  if (AQ_AGREE_SCORED.has(item)) return agree ? 1 : 0;
+  if (AQ_DISAGREE_SCORED.has(item)) return agree ? 0 : 1;
+  return 0;
+}
+
+buildTable('aq-tbody', AQ_DATA.map(([num, stmt, resp, _, sc, sub]) => {
+  const score = aqScore(num, resp);
+  const col = AQ_SUBSCALES[sub] || 'gray';
+  return `<tr>
+    <td class="item-num">${num}</td>
+    <td>${stmt}</td>
+    <td class="response" style="color:${score?'var(--coral)':'var(--muted)'}">${resp}</td>
+    <td class="score-val" style="color:${score?'var(--coral)':'var(--muted)'}">${score}</td>
+    <td class="subscale-tag">${tag(sub, col)}</td>
+  </tr>`;
+}));
+
+// ─────────────────────────────────────────────
+// RAADS-R
+// Scoring: True now and when young = 3, True only now = 2, True only when young = 1, Never = 0
+// Items 1,6,8,9,11,13,14,19,23,24,26,27,28,40,41 are REVERSE scored (neurotypical items)
+const RAADS_DATA = [
+  [1,"I am a sympathetic person.","True now and when young",3,"Social Relatedness"],
+  [2,"I often use words and phrases from movies and television in conversations.","True now and when young",3,"Language"],
+  [3,"I am often surprised when others tell me I have been rude.","True now and when young",3,"Social Relatedness"],
+  [4,"Sometimes I talk too loudly or too softly, and I am not aware of it.","True now and when young",3,"Language"],
+  [5,"I often don't know how to act in social situations.","True now and when young",3,"Social Relatedness"],
+  [6,"I can 'put myself in other people's shoes.'","Never true",0,"Social Relatedness"],
+  [7,"I have a hard time figuring out what some phrases mean, like 'you are the apple of my eye.'","True now and when young",3,"Language"],
+  [8,"I only like to talk to people who share my special interests.","Never true",0,"Circumscribed Interests"],
+  [9,"I focus on details rather than the overall idea.","Never true",0,"Circumscribed Interests"],
+  [10,"I always notice how food feels in my mouth. This is more important to me than how it tastes.","True only when young <16",1,"Sensory/Motor"],
+  [11,"I miss my best friends or family when we are apart for a long time.","Never true",0,"Social Relatedness"],
+  [12,"Sometimes I offend others by saying what I am thinking, even if I don't mean to.","True now and when young",3,"Social Relatedness"],
+  [13,"I only like to think and talk about a few things that interest me.","Never true",0,"Circumscribed Interests"],
+  [14,"I'd rather go out to eat in a restaurant by myself than with someone I know.","True now and when young",3,"Social Relatedness"],
+  [15,"I cannot imagine what it would be like to be someone else.","True only now",2,"Social Relatedness"],
+  [16,"I have been told that I am clumsy or uncoordinated.","True now and when young",3,"Sensory/Motor"],
+  [17,"Others consider me odd or different.","True now and when young",3,"Social Relatedness"],
+  [18,"I understand when friends need to be comforted.","True only now",2,"Social Relatedness"],
+  [19,"I am very sensitive to the way my clothes feel when I touch them. How they feel is more important to me than how they look.","True now and when young",3,"Sensory/Motor"],
+  [20,"I like to copy the way certain people speak and act. It helps me appear more normal.","True now and when young",3,"Social Relatedness"],
+  [21,"It can be very intimidating for me to talk to more than one person at the same time.","True now and when young",3,"Social Relatedness"],
+  [22,"I have to 'act normal' to please other people and make them like me.","True now and when young",3,"Social Relatedness"],
+  [23,"Meeting new people is usually easy for me.","Never true",0,"Social Relatedness"],
+  [24,"I get highly confused when someone interrupts me when I am talking about something I am very interested in.","Never true",0,"Circumscribed Interests"],
+  [25,"It is difficult for me to understand how other people are feeling when we are talking.","True now and when young",3,"Social Relatedness"],
+  [26,"I like having a conversation with several people, for instance around a dinner table, at school or at work.","Never true",0,"Social Relatedness"],
+  [27,"I take things too literally, so I often miss what people are trying to say.","Never true",0,"Language"],
+  [28,"It is very difficult for me to understand when someone is embarrassed or jealous.","Never true",0,"Social Relatedness"],
+  [29,"Some ordinary textures that do not bother others feel very offensive when they touch my skin.","True now and when young",3,"Sensory/Motor"],
+  [30,"I get extremely upset when the way I like to do things is suddenly changed.","True now and when young",3,"Circumscribed Interests"],
+  [31,"I have never wanted or needed to have what other people call an 'intimate relationship.'","True now and when young",3,"Social Relatedness"],
+  [32,"It is difficult for me to start and stop a conversation. I need to keep going until I am finished.","True now and when young",3,"Language"],
+  [33,"I speak with a normal rhythm.","Never true",0,"Language"],
+  [34,"The same sound, color or texture can suddenly change from very sensitive to very dull.","Never true",0,"Sensory/Motor"],
+  [35,"The phrase 'I've got you under my skin' makes me uncomfortable.","True now and when young",3,"Language"],
+  [36,"Sometimes the sound of a word or a high-pitched noise can be painful to my ears.","True now and when young",3,"Sensory/Motor"],
+  [37,"I am an understanding type of person.","True now and when young",3,"Social Relatedness"],
+  [38,"I do not connect with characters in movies and cannot feel what they feel.","Never true",0,"Social Relatedness"],
+  [39,"I cannot tell when someone is flirting with me.","True now and when young",3,"Social Relatedness"],
+  [40,"I can see in my mind in exact detail things that I am interested in.","Never true",0,"Circumscribed Interests"],
+  [41,"I keep lists of things that interest me, even when they have no practical use.","Never true",0,"Circumscribed Interests"],
+  [42,"When I feel overwhelmed by my senses, I have to isolate myself to shut them down.","True now and when young",3,"Sensory/Motor"],
+  [43,"I like to talk things over with my friends.","True only when young <16",1,"Social Relatedness"],
+  [44,"I cannot tell if someone is interested or bored with what I am saying.","True only when young <16",1,"Social Relatedness"],
+  [45,"It can be very hard to read someone's face, hand and body movements when they are talking.","True now and when young",3,"Social Relatedness"],
+  [46,"The same thing (like clothes or temperatures) can feel very different to me at different times.","True now and when young",3,"Sensory/Motor"],
+  [47,"I feel very comfortable with dating or being in social situations with others.","Never true",0,"Social Relatedness"],
+  [48,"I try to be as helpful as I can when other people tell me their personal problems.","True now and when young",3,"Social Relatedness"],
+  [49,"I have been told that I have an unusual voice (for example flat, monotone, childish, or high-pitched).","Never true",0,"Language"],
+  [50,"Sometimes a thought or a subject gets stuck in my mind and I have to talk about it even if no one is interested.","True now and when young",3,"Circumscribed Interests"],
+  [51,"I do certain things with my hands over and over again (like flapping, twirling sticks or strings, waving things by my eyes).","True now and when young",3,"Sensory/Motor"],
+  [52,"I have never been interested in what most of the people I know consider interesting.","Never true",0,"Social Relatedness"],
+  [53,"I am considered a compassionate type of person.","True now and when young",3,"Social Relatedness"],
+  [54,"I get along with other people by following a set of specific rules that help me look normal.","True now and when young",3,"Social Relatedness"],
+  [55,"It is very difficult for me to work and function in groups.","Never true",0,"Social Relatedness"],
+  [56,"When I am talking to someone, it is hard to change the subject. If the other person does so, I can get very upset and confused.","Never true",0,"Language"],
+  [57,"Sometimes I have to cover my ears to block out painful noises (like vacuum cleaners or people talking too much or too loudly).","True now and when young",3,"Sensory/Motor"],
+  [58,"I can chat and make small talk with people.","True only now",2,"Social Relatedness"],
+  [59,"Sometimes things that should feel painful are not (for instance when I hurt myself or burn my hand on the stove).","True now and when young",3,"Sensory/Motor"],
+  [60,"When talking to someone, I have a hard time telling when it is my turn to talk or to listen.","True now and when young",3,"Language"],
+  [61,"I am considered a loner by those who know me best.","True now and when young",3,"Social Relatedness"],
+  [62,"I usually speak in a normal tone.","True now and when young",3,"Language"],
+  [63,"I like things to be exactly the same day after day and even small changes in my routines upset me.","Never true",0,"Circumscribed Interests"],
+  [64,"How to make friends and socialize is a mystery to me.","True only now",2,"Social Relatedness"],
+  [65,"It calms me to spin around or to rock in a chair when I'm feeling stressed.","True now and when young",3,"Sensory/Motor"],
+  [66,"The phrase, 'He wears his heart on his sleeve,' does not make sense to me.","Never true",0,"Language"],
+  [67,"If I am in a place where there are many smells, textures to feel, noises or bright lights, I feel anxious or frightened.","True now and when young",3,"Sensory/Motor"],
+  [68,"I can tell when someone says one thing but means something else.","True now and when young",3,"Social Relatedness"],
+  [69,"I like to be by myself as much as I can.","True now and when young",3,"Social Relatedness"],
+  [70,"I keep my thoughts stacked in my memory like they are on filing cards, and I pick out the ones I need by looking through the stack and finding the right one (or another unique way).","True now and when young",3,"Circumscribed Interests"],
+  [71,"The same sound sometimes seems very loud or very soft, even though I know it has not changed.","True now and when young",3,"Sensory/Motor"],
+  [72,"I enjoy spending time eating and talking with my family and friends.","True only now",2,"Social Relatedness"],
+  [73,"I can't tolerate things I dislike (like smells, textures, sounds or colors).","True now and when young",3,"Sensory/Motor"],
+  [74,"I don't like to be hugged or held.","Never true",0,"Sensory/Motor"],
+  [75,"When I go somewhere, I have to follow a familiar route or I can get very confused and upset.","True now and when young",3,"Circumscribed Interests"],
+  [76,"It is difficult to figure out what other people expect of me.","True now and when young",3,"Social Relatedness"],
+  [77,"I like to have close friends.","True now and when young",3,"Social Relatedness"],
+  [78,"People tell me that I give too much detail.","True now and when young",3,"Language"],
+  [79,"I am often told that I ask embarrassing questions.","True now and when young",3,"Social Relatedness"],
+  [80,"I tend to point out other people's mistakes.","True now and when young",3,"Social Relatedness"],
+];
+
+// Reverse-scored items for RAADS-R (neurotypical items: higher score = less autistic → these are already scored 0 when "Never true")
+// For RAADS-R, ALL items: "True now and when young" = 3, "True only now" = 2, "True only when <16" = 1, "Never" = 0
+// The reverse items (NT items) mean "Never true" = 3 and "True now and when young" = 0
+// NT items (per Ritvo scoring key): 6,11,13,18,23,26,27,28,37,38,40,41,43,44,47,48,52,53,55,56,58,63,66,72,74
+// These need special scoring in the context - however the scores shown in the PDF are the RAW responses, 
+// and the total of 155 is already computed by the website which handles reverse scoring
+// For our display we show the response label and the RAW score as recorded
+
+const RAADS_SUBSCALE_COLORS = {
+  "Social Relatedness": "coral",
+  "Sensory/Motor": "teal",
+  "Circumscribed Interests": "amber",
+  "Language": "purple"
+};
+
+buildTable('raads-tbody', RAADS_DATA.map(([num, stmt, resp, score, sub]) => {
+  const col = RAADS_SUBSCALE_COLORS[sub] || 'gray';
+  const scoreColor = score === 3 ? 'var(--coral)' : score === 2 ? 'var(--amber)' : score === 0 ? 'var(--muted)' : 'var(--teal)';
+  return `<tr>
+    <td class="item-num">${num}</td>
+    <td>${stmt}</td>
+    <td class="response" style="color:${scoreColor}">${resp}</td>
+    <td class="score-val" style="color:${scoreColor}">${score}</td>
+    <td class="subscale-tag">${tag(sub, col)}</td>
+  </tr>`;
+}));
+
+// ─────────────────────────────────────────────
+// CAT-Q
+// Scale: Strongly Disagree=1, Disagree=2, Somewhat Disagree=3, Neither=4, Somewhat Agree=5, Agree=6, Strongly Agree=7
+// Compensation items: 1,2,6,11,14,15,20,23 (reverse: 3,9,12,16,18,24)
+// Masking items: 7,13,19,22,25 (reverse: 3,10,12,16,24)
+// Assimilation items: 4,5,8,10,14,17,21 (reverse: None? check key)
+// Using observed responses and subscale totals from PDF
+const CATQ_RESPONSE_MAP = {'a':1,'b':2,'c':3,'d':4,'e':5,'f':6,'g':7};
+const CATQ_DATA = [
+  [1,"When I am interacting with someone, I deliberately copy their body language or facial expressions.","Agree",6,"Compensation"],
+  [2,"I monitor my body language or facial expressions so that I appear relaxed.","Strongly Agree",7,"Compensation"],
+  [3,"I rarely feel the need to put on an act in order to get through a social situation.","Strongly Agree",7,"Masking"], // reverse
+  [4,"I have developed a script to follow in social situations.","Strongly Agree",7,"Assimilation"],
+  [5,"I will repeat phrases that I have heard others say in the exact same way that I first heard them.","Somewhat Disagree",3,"Assimilation"],
+  [6,"I adjust my body language or facial expressions so that I appear interested by the person I am interacting with.","Strongly Agree",7,"Compensation"],
+  [7,"In social situations, I feel like I'm 'performing' rather than being myself.","Strongly Agree",7,"Masking"],
+  [8,"In my own social interactions, I use behaviours that I have learned from watching other people interacting.","Strongly Agree",7,"Assimilation"],
+  [9,"I always think about the impression I make on other people.","Somewhat Disagree",3,"Compensation"], // reverse
+  [10,"I need the support of other people in order to socialise.","Agree",6,"Assimilation"],
+  [11,"I practice my facial expressions and body language to make sure they look natural.","Neither Agree nor Disagree",4,"Compensation"],
+  [12,"I don't feel the need to make eye contact with other people if I don't want to.","Agree",6,"Masking"], // reverse
+  [13,"I have to force myself to interact with people when I am in social situations.","Strongly Agree",7,"Masking"],
+  [14,"I have tried to improve my understanding of social skills by watching other people.","Strongly Agree",7,"Assimilation"],
+  [15,"I monitor my body language or facial expressions so that I appear interested by the person I am interacting with.","Agree",6,"Compensation"],
+  [16,"When in social situations, I try to find ways to avoid interacting with others.","Agree",6,"Masking"], // note: this is assimilation per some keys
+  [17,"I have researched the rules of social interactions to improve my own social skills.","Agree",6,"Assimilation"],
+  [18,"I am always aware of the impression I make on other people.","Strongly Disagree",1,"Compensation"], // reverse
+  [19,"I feel free to be myself when I am with other people.","Somewhat Disagree",3,"Masking"], // reverse
+  [20,"I learn how people use their bodies and faces to interact by watching television or films, or by reading fiction.","Disagree",2,"Compensation"],
+  [21,"I adjust my body language or facial expressions so that I appear relaxed.","Agree",6,"Assimilation"],
+  [22,"When talking to other people, I feel like the conversation flows naturally.","Somewhat Disagree",3,"Masking"], // reverse
+  [23,"I have spent time learning social skills from television shows and films, and try to use these in my interactions.","Somewhat Disagree",3,"Compensation"],
+  [24,"In social interactions, I do not pay attention to what my face or body are doing.","Strongly Disagree",1,"Assimilation"], // reverse
+  [25,"In social situations, I feel like I am pretending to be 'normal'.","Strongly Agree",7,"Masking"],
+];
+
+const CATQ_SUBSCALE_COLORS = {
+  "Compensation": "coral",
+  "Masking": "purple",
+  "Assimilation": "amber"
+};
+
+buildTable('catq-tbody', CATQ_DATA.map(([num, stmt, resp, score, sub]) => {
+  const col = CATQ_SUBSCALE_COLORS[sub] || 'gray';
+  const c = score >= 6 ? 'var(--coral)' : score >= 5 ? 'var(--amber)' : score <= 2 ? 'var(--sage)' : 'var(--text)';
+  return `<tr>
+    <td class="item-num">${num}</td>
+    <td>${stmt}</td>
+    <td class="response" style="color:${c}">${resp}</td>
+    <td class="score-val" style="color:${c}">${score}</td>
+    <td class="subscale-tag">${tag(sub, col)}</td>
+  </tr>`;
+}));
+
+// ─────────────────────────────────────────────
+// ASRS
+const ASRS_DATA = [
+  [1,"How often do you have trouble wrapping up the final details of a project, once the challenging parts have been done?","Very Often","A","Inattention"],
+  [2,"How often do you have difficulty getting things in order when you have to do a task that requires organization?","Often","A","Inattention"],
+  [3,"How often do you have problems remembering appointments or obligations?","Often","A","Inattention"],
+  [4,"When you have a task that requires a lot of thought, how often do you avoid or delay getting started?","Often","A","Inattention"],
+  [5,"How often do you fidget or squirm with your hands or feet when you have to sit down for a long time?","Very Often","A","Hyperactivity/Impulsivity"],
+  [6,"How often do you feel overly active and compelled to do things, like you were driven by a motor?","Very Often","A","Hyperactivity/Impulsivity"],
+  [7,"How often do you make careless mistakes when you have to work on a boring or difficult project?","Often","B","Inattention"],
+  [8,"How often do you have difficulty keeping your attention when you are doing boring or repetitive work?","Often","B","Inattention"],
+  [9,"How often do you have difficulty concentrating on what people say to you, even when they are speaking to you directly?","Rarely","B","Inattention"],
+  [10,"How often do you misplace or have difficulty finding things at home or at work?","Sometimes","B","Inattention"],
+  [11,"How often are you distracted by activity or noise around you?","Very Often","B","Inattention"],
+  [12,"How often do you leave your seat in meetings or other situations in which you are expected to remain seated?","Very Often","B","Hyperactivity/Impulsivity"],
+  [13,"How often do you feel restless or fidgety?","Very Often","B","Hyperactivity/Impulsivity"],
+  [14,"How often do you have difficulty unwinding and relaxing when you have time to yourself?","Very Often","B","Hyperactivity/Impulsivity"],
+  [15,"How often do you find yourself talking too much when you are in social situations?","Very Often","B","Hyperactivity/Impulsivity"],
+  [16,"When you're in a conversation, how often do you find yourself finishing the sentences of the people you are talking to, before they can finish them themselves?","Very Often","B","Hyperactivity/Impulsivity"],
+  [17,"How often do you have difficulty waiting your turn in situations when turn taking is required?","Very Often","B","Hyperactivity/Impulsivity"],
+  [18,"How often do you interrupt others when they are busy?","Very Often","B","Hyperactivity/Impulsivity"],
+];
+
+const ASRS_SCORE_MAP = {Never:0,Rarely:1,Sometimes:2,Often:3,"Very Often":4};
+
+buildTable('asrs-tbody', ASRS_DATA.map(([num, q, resp, part, domain]) => {
+  const score = ASRS_SCORE_MAP[resp] || 0;
+  const isHigh = resp === 'Very Often' || resp === 'Often';
+  const c = isHigh ? 'var(--coral)' : 'var(--text)';
+  const partCol = part === 'A' ? 'coral' : 'gray';
+  const domCol = domain.includes('Inatt') ? 'purple' : 'teal';
+  return `<tr>
+    <td class="item-num">${num}</td>
+    <td>${q}</td>
+    <td class="response" style="color:${c}">${resp}</td>
+    <td class="subscale-tag">${tag('Part ' + part, partCol)}</td>
+    <td class="subscale-tag">${tag(domain, domCol)}</td>
+  </tr>`;
+}));
+
+// ─────────────────────────────────────────────
+// TAS-20
+// Scale: Strongly Disagree=1, Disagree=2, Neither=3, Agree=4, Strongly Agree=5
+// Reverse items: 4,5,10,18,19
+const TAS_DATA = [
+  [1,"I am often confused about what emotion I am feeling.","Neither Agree nor Disagree",3,false,"DIF"],
+  [2,"It is difficult for me to find the right words for my feelings.","Agree",4,false,"DDF"],
+  [3,"I have physical sensations that even doctors don't understand.","Agree",4,false,"DIF"],
+  [4,"I am able to describe my feelings easily.","Disagree",2,true,"DDF"],
+  [5,"I prefer to analyze problems rather than just describe them.","Agree",4,true,"EOT"],
+  [6,"When I am upset, I don't know if I am sad, frightened, or angry.","Agree",4,false,"DIF"],
+  [7,"I am often puzzled by sensations in my body.","Agree",4,false,"DIF"],
+  [8,"I prefer to just let things happen rather than to understand why they turned out that way.","Strongly Disagree",1,false,"EOT"],
+  [9,"I have feelings that I can't quite identify.","Neither Agree nor Disagree",3,false,"DIF"],
+  [10,"Being in touch with emotions is essential.","Strongly Agree",5,true,"EOT"],
+  [11,"I find it hard to describe how I feel about people.","Strongly Agree",5,false,"DDF"],
+  [12,"People tell me to describe my feelings more.","Agree",4,false,"DDF"],
+  [13,"I don't know what's going on inside me.","Disagree",2,false,"DIF"],
+  [14,"I often don't know why I am angry.","Neither Agree nor Disagree",3,false,"DIF"],
+  [15,"I prefer talking to people about their daily activities rather than their feelings.","Strongly Disagree",1,false,"EOT"],
+  [16,"I prefer to watch 'light' entertainment shows rather than psychological dramas.","Strongly Disagree",1,false,"EOT"],
+  [17,"It is difficult for me to reveal my innermost feelings, even to close friends.","Strongly Agree",5,false,"DDF"],
+  [18,"I can feel close to someone, even in moments of silence.","Agree",4,true,"EOT"],
+  [19,"I find examination of my feelings useful in solving personal problems.","Strongly Agree",5,true,"EOT"],
+  [20,"Looking for hidden meanings in movies or plays distracts from my enjoyment.","Strongly Agree",5,false,"EOT"],
+];
+
+const TAS_SUBSCALE_COLORS = {"DIF":"coral","DDF":"purple","EOT":"sage"};
+const TAS_SUBSCALE_NAMES = {"DIF":"Difficulty Identifying Feelings","DDF":"Difficulty Describing Feelings","EOT":"Externally Oriented Thinking"};
+
+buildTable('tas-tbody', TAS_DATA.map(([num, stmt, resp, raw, reverse, sub]) => {
+  const scored = reverse ? (6 - raw) : raw;
+  const col = TAS_SUBSCALE_COLORS[sub];
+  const c = scored >= 4 && sub !== 'EOT' ? 'var(--coral)' : scored <= 2 && sub !== 'EOT' ? 'var(--sage)' : 'var(--text)';
+  return `<tr>
+    <td class="item-num">${num}</td>
+    <td>${stmt}${reverse?' <span style="color:var(--muted);font-size:.68rem">(R)</span>':''}</td>
+    <td class="response">${resp}</td>
+    <td class="score-val">${raw}</td>
+    <td class="score-val" style="color:${c}">${scored}</td>
+    <td class="subscale-tag">${tag(TAS_SUBSCALE_NAMES[sub], col)}</td>
+  </tr>`;
+}));
+
+// TAS scoring row
+const difTotal = TAS_DATA.filter(d=>d[5]==='DIF').reduce((s,d)=>s+(d[4]?6-d[3]:d[3]),0);
+const ddfTotal = TAS_DATA.filter(d=>d[5]==='DDF').reduce((s,d)=>s+(d[4]?6-d[3]:d[3]),0);
+const eotTotal = TAS_DATA.filter(d=>d[5]==='EOT').reduce((s,d)=>s+(d[4]?6-d[3]:d[3]),0);
+document.getElementById('tas-tbody').insertAdjacentHTML('beforeend',
+  `<tr class="scoring-row"><td colspan="4">Subscale Totals</td>
+   <td colspan="2">DIF: <span class="c-coral">${difTotal}</span> &nbsp;|&nbsp; DDF: <span class="c-coral">${ddfTotal}</span> &nbsp;|&nbsp; EOT: <span class="c-sage">${eotTotal}</span> &nbsp;|&nbsp; Total: <span class="c-amber">${difTotal+ddfTotal+eotTotal}</span></td></tr>`
+);
+
+// ─────────────────────────────────────────────
+// AASP
+// Quadrant assignment is approximate based on AASP manual
+// Low Registration (LR): low neurological threshold + passive behavioral response
+// Sensation Seeking (SS): low threshold + active response
+// Sensory Sensitivity (SeSe): high threshold + passive response  
+// Sensation Avoiding (SA): high threshold + active response
+const AASP_CSV = [
+  [1,"A","Taste/Smell","I leave or move to another section when I smell a strong odor in a store.",5,"Almost Always","SA"],
+  [2,"A","Taste/Smell","I add spice to my food.",4,"Frequently","SS"],
+  [3,"A","Taste/Smell","I don't smell things that other people say they smell.",2,"Seldom","LR"],
+  [4,"A","Taste/Smell","I enjoy being close to people who wear perfume or cologne.",1,"Almost Never","SeSe"],
+  [5,"A","Taste/Smell","I only eat familiar foods.",4,"Frequently","SA"],
+  [6,"A","Taste/Smell","Many foods taste bland to me.",3,"Occasionally","LR"],
+  [7,"A","Taste/Smell","I don't like strong tasting mints or candies.",4,"Frequently","SA"],
+  [8,"A","Taste/Smell","I go over to smell fresh flowers when I see them.",5,"Almost Always","SS"],
+  [9,"B","Movement","I'm afraid of heights.",3,"Occasionally","SeSe"],
+  [10,"B","Movement","I enjoy how it feels to move about.",4,"Frequently","SS"],
+  [11,"B","Movement","I avoid elevators/escalators because I dislike the movement.",1,"Almost Never","SA"],
+  [12,"B","Movement","I trip or bump into things.",4,"Frequently","LR"],
+  [13,"B","Movement","I dislike the movement of riding in a car.",3,"Occasionally","SeSe"],
+  [14,"B","Movement","I choose to engage in physical activities.",4,"Frequently","SS"],
+  [15,"B","Movement","I am unsure of footing when walking on stairs.",4,"Frequently","LR"],
+  [16,"B","Movement","I become dizzy easily.",4,"Frequently","LR"],
+  [17,"C","Visual","I like to go to places that have bright lights and that are colorful.",1,"Almost Never","SS"],
+  [18,"C","Visual","I keep the shades down during the day when I am at home.",4,"Frequently","SA"],
+  [19,"C","Visual","I like to wear colorful clothing.",2,"Seldom","SS"],
+  [20,"C","Visual","I become frustrated when trying to find something in a crowded drawer or messy room.",4,"Frequently","SeSe"],
+  [21,"C","Visual","I miss street/building/room signs when trying to go somewhere new.",4,"Frequently","LR"],
+  [22,"C","Visual","I am bothered by unsteady or fast moving visual images in movies or TV.",5,"Almost Always","SeSe"],
+  [23,"C","Visual","I don't notice when people come into the room.",3,"Occasionally","LR"],
+  [24,"C","Visual","I choose to shop in smaller stores because I'm overwhelmed in large stores.",2,"Seldom","SA"],
+  [25,"C","Visual","I become bothered when I see lots of movement around me.",4,"Frequently","SeSe"],
+  [26,"C","Visual","I limit distractions when I am working.",4,"Frequently","SA"],
+  [27,"D","Touch","I dislike having my back rubbed.",3,"Occasionally","SeSe"],
+  [28,"D","Touch","I like how it feels to get my hair cut.",3,"Occasionally","SS"],
+  [29,"D","Touch","I avoid or wear gloves during activities that will make my hands messy.",2,"Seldom","SA"],
+  [30,"D","Touch","I touch others when I'm talking.",3,"Occasionally","SS"],
+  [31,"D","Touch","I am bothered by the feeling in my mouth when I wake up in the morning.",4,"Frequently","SeSe"],
+  [32,"D","Touch","I like to go barefoot.",5,"Almost Always","SS"],
+  [33,"D","Touch","I'm uncomfortable wearing certain fabrics.",5,"Almost Always","SeSe"],
+  [34,"D","Touch","I don't like particular food textures.",2,"Seldom","SeSe"],
+  [35,"D","Touch","I move away when others get too close to me.",4,"Frequently","SA"],
+  [36,"D","Touch","I don't seem to notice when my face or hands are dirty.",1,"Almost Never","LR"],
+  [37,"D","Touch","I get scrapes or bruises but don't remember how I got them.",5,"Almost Always","LR"],
+  [38,"D","Touch","I avoid standing in lines or standing close to other people.",4,"Frequently","SA"],
+  [39,"D","Touch","I don't seem to notice when someone touches my arm or back.",1,"Almost Never","LR"],
+  [40,"E","Activity","I work on two or more tasks at the same time.",5,"Almost Always","SS"],
+  [41,"E","Activity","It takes me more time than others to wake up in the morning.",5,"Almost Always","LR"],
+  [42,"E","Activity","I do things on the spur of the moment.",4,"Frequently","SS"],
+  [43,"E","Activity","I find time to get away from my busy life and spend time by myself.",2,"Seldom","SA"],
+  [44,"E","Activity","I seem slower than others when trying to follow an activity or task.",3,"Occasionally","LR"],
+  [45,"E","Activity","I don't get jokes as quickly as others.",1,"Almost Never","LR"],
+  [46,"E","Activity","I stay away from crowds.",4,"Frequently","SA"],
+  [47,"E","Activity","I find activities to perform in front of others.",2,"Seldom","SA"],
+  [48,"E","Activity","I find it hard to concentrate for the whole time when sitting in a long class or meeting.",4,"Frequently","SeSe"],
+  [49,"E","Activity","I avoid situations where unexpected things might happen.",4,"Frequently","SA"],
+  [50,"F","Auditory","I hum, whistle, sing, or make other noises.",4,"Frequently","SS"],
+  [51,"F","Auditory","I startle easily at unexpected or loud noises.",5,"Almost Always","SeSe"],
+  [52,"F","Auditory","I have trouble following what people are saying when they talk fast or about unfamiliar topics.",1,"Almost Never","LR"],
+  [53,"F","Auditory","I leave the room when others are watching TV, or I ask them to turn it down.",4,"Frequently","SA"],
+  [54,"F","Auditory","I am distracted if there is a lot of noise around.",null,"MISSING",""],
+  [55,"F","Auditory","I don't notice when my name is called.",3,"Occasionally","LR"],
+  [56,"F","Auditory","I use strategies to drown out sound.",5,"Almost Always","SA"],
+  [57,"F","Auditory","I stay away from noisy settings.",5,"Almost Always","SA"],
+  [58,"F","Auditory","I like to attend events with a lot of music.",1,"Almost Never","SS"],
+  [59,"F","Auditory","I have to ask people to repeat things.",3,"Occasionally","LR"],
+  [60,"F","Auditory","I find it difficult to work with background noise.",3,"Occasionally","SeSe"],
+];
+
+const AASP_Q_COLORS = {"SA":"coral","SeSe":"purple","LR":"amber","SS":"teal","":" gray"};
+const AASP_Q_LABELS = {"SA":"Sensation Avoiding","SeSe":"Sensory Sensitivity","LR":"Low Registration","SS":"Sensation Seeking","":" —"};
+
+let lastMod = '';
+const aaspRows = AASP_CSV.map(([num, code, mod, stmt, score, label, quad]) => {
+  let sectionHdr = '';
+  if (mod !== lastMod) { lastMdr = mod; sectionHdr = `<tr class="section-header"><td colspan="6">${mod} Processing — Section ${code}</td></tr>`; lastMod = mod; }
+  const col = AASP_Q_COLORS[quad] || 'gray';
+  const c = score === 5 ? 'var(--coral)' : score === 1 ? 'var(--muted)' : score === null ? 'var(--muted)' : 'var(--text)';
+  const isMissing = score === null;
+  return sectionHdr + `<tr${isMissing?' style="opacity:.5"':''}>
+    <td class="item-num">${num}</td>
+    <td>${stmt}</td>
+    <td class="subscale-tag">${mod}</td>
+    <td class="response" style="color:${c}">${label}</td>
+    <td class="score-val" style="color:${c}">${isMissing?'—':score}</td>
+    <td class="subscale-tag">${quad?tag(AASP_Q_LABELS[quad],col):'<span style="color:var(--muted)">—</span>'}</td>
+  </tr>`;
+});
+buildTable('aasp-tbody', aaspRows);
+
+// ─────────────────────────────────────────────
+// MAIA-2
+// Selected response is the highlighted cell (yellow/teal background in PDF)
+const MAIA_DATA = [
+  [1,"When I am tense I notice where the tension is located in my body.",3,"Occasionally","Noticing"],
+  [2,"I notice when I am uncomfortable in my body.",3,"Occasionally","Noticing"],
+  [3,"I notice where in my body I am comfortable.",1,"Very Rarely","Noticing"],
+  [4,"I notice changes in my breathing, such as whether it slows down or speeds up.",1,"Very Rarely","Noticing"],
+  [5,"I ignore physical tension or discomfort until they become more severe.",0,"Never","Not-Distracting"],
+  [6,"I distract myself from sensations of discomfort.",1,"Very Rarely","Not-Distracting"],
+  [7,"When I feel pain or discomfort, I try to power through it.",1,"Very Rarely","Not-Distracting"],
+  [8,"I try to ignore pain.",1,"Very Rarely","Not-Distracting"],
+  [9,"I push feelings of discomfort away by focusing on something.",1,"Very Rarely","Not-Distracting"],
+  [10,"When I feel unpleasant body sensations, I occupy myself with something else so I don't have to feel them.",1,"Very Rarely","Not-Distracting"],
+  [11,"When I feel physical pain, I become upset.",0,"Never","Not-Worrying"],
+  [12,"I start to worry that something is wrong if I feel any discomfort.",1,"Very Rarely","Not-Worrying"],
+  [13,"I can notice an unpleasant body sensation without worrying about it.",2,"Rarely","Not-Worrying"],
+  [14,"I can stay calm and not worry when I have feelings of discomfort or pain.",2,"Rarely","Not-Worrying"],
+  [15,"When I am in discomfort or pain I can't get it out of my mind.",1,"Very Rarely","Not-Worrying"],
+  [16,"I can pay attention to my breath without being distracted by things happening around me.",1,"Very Rarely","Attention Regulation"],
+  [17,"I can maintain awareness of my inner bodily sensations even when there is a lot going on around me.",2,"Rarely","Attention Regulation"],
+  [18,"When I am in conversation with someone, I can pay attention to my posture.",4,"Very Frequently","Attention Regulation"],
+  [19,"I can return awareness to my body if I am distracted.",2,"Rarely","Attention Regulation"],
+  [20,"I can refocus my attention from thinking to sensing my body.",2,"Rarely","Attention Regulation"],
+  [21,"I can maintain awareness of my whole body even when a part of me is in pain or discomfort.",3,"Occasionally","Attention Regulation"],
+  [22,"I am able to consciously focus on my body as a whole.",2,"Rarely","Attention Regulation"],
+  [23,"I notice how my body changes when I am angry.",2,"Rarely","Emotional Awareness"],
+  [24,"When something is wrong in my life I can feel it in my body.",4,"Very Frequently","Emotional Awareness"],
+  [25,"I notice that my body feels different after a peaceful experience.",2,"Rarely","Emotional Awareness"],
+  [26,"I notice that my breathing becomes free and easy when I feel comfortable.",2,"Rarely","Emotional Awareness"],
+  [27,"I notice how my body changes when I feel happy / joyful.",2,"Rarely","Emotional Awareness"],
+  [28,"When I feel overwhelmed I can find a calm place inside.",2,"Rarely","Self-Regulation"],
+  [29,"When I bring awareness to my body I feel a sense of calm.",2,"Rarely","Self-Regulation"],
+  [30,"I can use my breath to reduce tension.",3,"Occasionally","Self-Regulation"],
+  [31,"When I am caught up in thoughts, I can calm my mind by focusing on my body/breathing.",2,"Rarely","Self-Regulation"],
+  [32,"I listen for information from my body about my emotional state.",4,"Very Frequently","Body Listening"],
+  [33,"When I am upset, I take time to explore how my body feels.",4,"Very Frequently","Body Listening"],
+  [34,"I listen to my body to inform me about what to do.",3,"Occasionally","Body Listening"],
+  [35,"I am at home in my body.",2,"Rarely","Trust"],
+  [36,"I feel my body is a safe place.",3,"Occasionally","Trust"],
+  [37,"I trust my body sensations.",2,"Rarely","Trust"],
+];
+
+// For Not-Distracting (5-10) and Not-Worrying (11,12,15): higher response = LOWER score in subscale
+// The scored value = the response value for regular items; for reverse items (5-10, 11,12,15), scored = 5 - response
+// But the PDF shows individual item responses and subscale means including this
+const MAIA_REVERSE = new Set([5,6,7,8,9,10,11,12,15]);
+
+const MAIA_SUB_COLORS = {
+  "Noticing":"teal","Not-Distracting":"coral","Not-Worrying":"coral",
+  "Attention Regulation":"amber","Emotional Awareness":"amber",
+  "Self-Regulation":"sage","Body Listening":"sage","Trust":"purple"
+};
+
+buildTable('maia-tbody', MAIA_DATA.map(([num, stmt, resp, label, sub]) => {
+  const col = MAIA_SUB_COLORS[sub] || 'gray';
+  const isReverse = MAIA_REVERSE.has(num);
+  const scored = isReverse ? (5 - resp) : resp;
+  const c = scored >= 4 ? 'var(--sage)' : scored <= 1 ? 'var(--coral)' : 'var(--text)';
+  return `<tr>
+    <td class="item-num">${num}</td>
+    <td>${stmt}${isReverse?' <span style="color:var(--muted);font-size:.68rem">(R)</span>':''}</td>
+    <td class="response">${label} (${resp})</td>
+    <td class="score-val" style="color:${c}">${scored}</td>
+    <td class="subscale-tag">${tag(sub, col)}</td>
+  </tr>`;
+}));
+
+</script>
+</body>
+</html>
